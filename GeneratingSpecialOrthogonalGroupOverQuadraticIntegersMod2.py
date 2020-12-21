@@ -105,7 +105,7 @@ uniqueness_check = [[],[],[],[]]
 
 
 # Gives possible pairs and triplets of vectors
-# Doesn't quite agree with 259 pairs - Gives ~494. Since the pairs work, gonna have to think about the permutation part
+
 for i in range(len(normalized_vects)):
     for j in range(i, len(normalized_vects)):
         uniqueness_check[0]= []
@@ -113,13 +113,11 @@ for i in range(len(normalized_vects)):
         for perm in perms:
             # Checking for orthogonality
             if dot(normalized_vects[i],perm)[0]%2 == 0 and dot(normalized_vects[i],perm)[1]%2 == 0:
-                # Checking for uniqueness of permutation (This should be strong enough now. For some reason isn't)
-                # Closer but still not quite
-                # Need to make it such that a permutation of the pairwise product cannot be in the uniqueness check list either
+                # Checking for uniqueness of permutation (This should be strong enough now.)
                 if perm_check(normalized_vects[i],perm) not in uniqueness_check[0]:
                     uniqueness_check[0].append(perm_check(normalized_vects[i],perm))
                     possible_pairs[0].append([normalized_vects[i],list(perm)])
-                    # Does same for triplets But not quite functional yet
+                    # Does same for triplets etc.
                     for k in range(j, len(normalized_vects)):
                         perms2 = set(s for s in list(permutations(normalized_vects[k])))
                         uniqueness_check[1]=[]
