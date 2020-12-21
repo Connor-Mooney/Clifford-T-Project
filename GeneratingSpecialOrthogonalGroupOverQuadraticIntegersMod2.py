@@ -9,34 +9,34 @@ def display(V):
     s = "["
     for i in range(5):
         if V[i] == (0,0):
-            s = s + "0, "
+            s = s + "0   , "
         elif V[i][0] == 0:
             if V[i][1] == 1:
-                s = s + "√2, "
+                s = s + "√2  , "
             else:
-                s = s + "{}√2, ".format(V[i][1])
+                s = s + "{}√2  , ".format(V[i][1])
         elif V[i][1] == 0:
-            s = s + "{}, ".format(V[i][0])
+            s = s + "{}   , ".format(V[i][0])
         else:
             if V[i][1] == 1:
                 s = s + "{}+√2, ".format(V[i][0])
             else:
                 s = s + "{}+{}√2, ".format(V[i][0],V[i][1])
     if V[5] == (0,0):
-        s = s + "0]"
+        s = s + "   0]"
     elif V[5][0] == 0:
         if V[5][1] == 1:
-            s = s + "√2]"
+            s = s + "  √2]"
         else:
-            s = s + "{}√2]".format(V[5][1])
+            s = s + "  {}√2]".format(V[5][1])
     elif V[5][1] == 0:
-        s = s + "{}]".format(V[5][0])
+        s = s + "   {}]".format(V[5][0])
     else:
         if V[5][1] == 1:
             s = s + "{}+√2]".format(V[5][0])
         else:
             s = s + "{}+{}√2]".format(V[5][0],V[5][1])
-    print(s)
+    return s
 
 # returns dot product   
 def dot(v1,v2):
@@ -98,7 +98,7 @@ normalized_vects = [[(1,1),(1,1),(1,1),(1,1),(0,1),(0,1)],[(1,1),(1,1),(1,1),(1,
 [(0,1),(0,1),(0,1),(1,0),(1,0),(0,0)], [(0,1),(0,1),(1,0),(1,0),(1,0),(1,0)], [(0,1),(0,1),(0,0),(0,0),(0,0),(0,0)],\
 [(0,1),(1,0),(1,0),(0,0),(0,0),(0,0)],[(1,0),(1,0),(1,0),(1,0),(0,0),(0,0)],[(0,0),(0,0),(0,0),(0,0),(0,0),(0,0)]]        
 for v in normalized_vects:
-    display(v)
+    print(display(v))
 
 possible_pairs = [[],[],[],[]]
 uniqueness_check = [[],[],[],[]]
@@ -127,15 +127,48 @@ for i in range(len(normalized_vects)):
                             if dot(normalized_vects[i],p)[0]%2 == 0 and dot(normalized_vects[i],p)[1]%2 == 0 and dot(perm,p)[0]%2 == 0 and dot(perm,p)[1]%2 == 0:
                                 if perm_check(normalized_vects[i], perm_check(p, perm)) not in uniqueness_check[1]:
                                     uniqueness_check[1].append(perm_check(normalized_vects[i], perm_check(p, perm)))
-                                    possible_pairs[1].append([normalized_vects[i],perm, p])
+                                    possible_pairs[1].append([normalized_vects[i],list(perm), list(p)])
+                                    for l in range(k, len(normalized_vects)):
+                                        perms3 = set(s for s in list(permutations(normalized_vects[l])))
+                                        uniqueness_check[2]=[]
+                                        for p1 in perms3:
+                                            if dot(normalized_vects[i],p1)[0]%2 == 0 and dot(normalized_vects[i],p1)[1]%2 == 0 and dot(perm,p1)[0]%2 == 0 and dot(perm,p1)[1]%2 == 0 \
+                                               and dot(p,p1)[0]%2 == 0 and dot(p,p1)[1]%2 == 0:
+                                                if perm_check(normalized_vects[i], perm_check(perm_check(p,p1), perm)) not in uniqueness_check[2]:
+                                                    uniqueness_check[2].append(perm_check(normalized_vects[i], perm_check(perm_check(p,p1), perm)))
+                                                    possible_pairs[2].append([normalized_vects[i],list(perm), list(p), list(p1)])
+                                                    for m in range(l, len(normalized_vects)):
+                                                        perms4 = set(s for s in list(permutations(normalized_vects[m])))
+                                                        uniqueness_check[3]=[]
+                                                        for p2 in perms4:
+                                                            if dot(normalized_vects[i],p2)[0]%2 == 0 and dot(normalized_vects[i],p2)[1]%2 == 0 and dot(perm,p2)[0]%2 == 0 and dot(perm,p2)[1]%2 == 0 \
+                                                               and dot(p,p2)[0]%2 == 0 and dot(p,p2)[1]%2 == 0 and dot(p1,p2)[0]%2==0 and dot(p1,p2)[1]%2==0:
+                                                                if perm_check(normalized_vects[i], perm_check(perm, perm_check(p,perm_check(p1,p2)))) not in uniqueness_check[3]:
+                                                                    uniqueness_check[3].append(perm_check(normalized_vects[i], perm_check(perm, perm_check(p,perm_check(p1,p2)))))
+                                                                    possible_pairs[3].append([normalized_vects[i],list(perm), list(p), list(p1), list(p2)])
+
 
 
 print(len(possible_pairs[0]))
 print(len(possible_pairs[1]))
-for i in range(len(possible_pairs[0])):
-    print("***************************************************************************")
-    display(possible_pairs[0][i][0])
-    display(possible_pairs[0][i][1])
+print(len(possible_pairs[2]))
+print(len(possible_pairs[3]))
+
+txt = open("fiverows.txt","w", encoding="utf-8")
+
+for p in possible_pairs[3]:
+    txt.write(display(p[0])+"\n")
+    txt.write(display(p[1])+"\n")
+    txt.write(display(p[2])+"\n")
+    txt.write(display(p[3])+"\n")
+    txt.write(display(p[4])+"\n")
+    txt.write("\n")
+
+txt.close()
+#for i in range(len(possible_pairs[0])):
+   # print("***************************************************************************")
+   # display(possible_pairs[0][i][0])
+   # display(possible_pairs[0][i][1])
     
 #for p in possible_pairs[1]:
 #    print("***************************************************************************")
