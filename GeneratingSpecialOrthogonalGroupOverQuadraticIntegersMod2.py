@@ -100,7 +100,7 @@ normalized_vects = [[(1,1),(1,1),(1,1),(1,1),(0,1),(0,1)],[(1,1),(1,1),(1,1),(1,
 for v in normalized_vects:
     print(display(v))
 
-possible_pairs = [[],[],[],[]]
+possible_pairs = [[],[],[],[],[]]
 uniqueness_check = [[],[],[],[]]
 
 
@@ -161,7 +161,20 @@ for p in possible_pairs[3]:
     txt.write(display(p[3])+"\n")
     txt.write(display(p[4])+"\n")
     txt.write("\n")
+    # This didn't work, so we'll have to think about this more
+    #rowsix = []
+    #for i in range(len(p[0])):
+    #    coli = []
+    #    for r in p:
+    #        coli.append(r[i])
+    #    rowsix.append(((-dot(coli,coli)[0])%4, (-dot(coli,coli)[1])%4))
+    #for n in normalized_vects:
+    #    permutated = set(s for s in list(permutations(n)))
+    #    if rowsix in n:
+    #        sixbysix = p.copy().append(rowsix)
+    #        possible_pairs[4].append(sixbysix)
 
+print(len(possible_pairs[4]))
 txt.close()
 #for i in range(len(possible_pairs[0])):
    # print("***************************************************************************")
