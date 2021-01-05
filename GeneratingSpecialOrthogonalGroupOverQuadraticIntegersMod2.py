@@ -7,7 +7,7 @@ residues = [(0,0), (1,0), (0,1), (1,1)]
 # This section converts a vector of tuples into a vector that is easy to read
 def display(V):
     s = "["
-    for i in range(5):
+    for i in range(len(V)-1):
         if V[i] == (0,0):
             s = s + "0   , "
         elif V[i][0] == 0:
@@ -22,20 +22,20 @@ def display(V):
                 s = s + "{}+√2, ".format(V[i][0])
             else:
                 s = s + "{}+{}√2, ".format(V[i][0],V[i][1])
-    if V[5] == (0,0):
+    if V[-1] == (0,0):
         s = s + "   0]"
-    elif V[5][0] == 0:
-        if V[5][1] == 1:
+    elif V[-1][0] == 0:
+        if V[-1][1] == 1:
             s = s + "  √2]"
         else:
-            s = s + "  {}√2]".format(V[5][1])
-    elif V[5][1] == 0:
-        s = s + "   {}]".format(V[5][0])
+            s = s + "  {}√2]".format(V[-1][1])
+    elif V[-1][1] == 0:
+        s = s + "   {}]".format(V[-1][0])
     else:
-        if V[5][1] == 1:
-            s = s + "{}+√2]".format(V[5][0])
+        if V[-1][1] == 1:
+            s = s + "{}+√2]".format(V[-1][0])
         else:
-            s = s + "{}+{}√2]".format(V[5][0],V[5][1])
+            s = s + "{}+{}√2]".format(V[-1][0],V[-1][1])
     return s
 
 # returns dot product   
@@ -107,6 +107,7 @@ uniqueness_check = [[],[],[],[]]
 # Gives possible pairs and triplets of vectors
 
 for i in range(len(normalized_vects)):
+    print(len(possible_pairs[3]))
     for j in range(i, len(normalized_vects)):
         uniqueness_check[0]= []
         perms = set(s for s in list(permutations(normalized_vects[j])))
@@ -152,39 +153,53 @@ print(len(possible_pairs[1]))
 print(len(possible_pairs[2]))
 print(len(possible_pairs[3]))
 
-txt = open("fiverows.txt","w", encoding="utf-8")
+##txt = open("fiverows.txt","w", encoding="utf-8")
+##
+##for p in possible_pairs[3]:
+##    txt.write(display(p[0])+"\n")
+##    txt.write(display(p[1])+"\n")
+##    txt.write(display(p[2])+"\n")
+##    txt.write(display(p[3])+"\n")
+##    txt.write(display(p[4])+"\n")
+##    txt.write("\n")
 
-for p in possible_pairs[3]:
-    txt.write(display(p[0])+"\n")
-    txt.write(display(p[1])+"\n")
-    txt.write(display(p[2])+"\n")
-    txt.write(display(p[3])+"\n")
-    txt.write(display(p[4])+"\n")
-    txt.write("\n")
-    # This didn't work, so we'll have to think about this more
-    #rowsix = []
-    #for i in range(len(p[0])):
-    #    coli = []
-    #    for r in p:
-    #        coli.append(r[i])
-    #    rowsix.append(((-dot(coli,coli)[0])%4, (-dot(coli,coli)[1])%4))
-    #for n in normalized_vects:
-    #    permutated = set(s for s in list(permutations(n)))
-    #    if rowsix in n:
-    #        sixbysix = p.copy().append(rowsix)
-    #        possible_pairs[4].append(sixbysix)
-
-print(len(possible_pairs[4]))
-txt.close()
-#for i in range(len(possible_pairs[0])):
-   # print("***************************************************************************")
-   # display(possible_pairs[0][i][0])
-   # display(possible_pairs[0][i][1])
-    
-#for p in possible_pairs[1]:
-#    print("***************************************************************************")
-#    display(p[0])
-#    display(p[1])
-#   display(p[2])
+for i in range(len(possible_pairs[3])):
+    p = possible_pairs[3][i]
+    rowsix = []
+    for i in range(len(p[0])):
+        coli = []
+        for r in p:
+            coli.append(r[i])
+        #print(display(coli))
+        rowsix.append(((-dot(coli,coli)[0])%4, (-dot(coli,coli)[1])%4))
+    #for i in range(len(p)):
+    #    print(display(p[i]))
+    #print("Sixth row: " + display(rowsix))
+    correctrowsix=[]
+    for i in range(len(rowsix)):
+        if rowsix[i] == (0,0):
+            correctrowsix.append((0,0))
+        elif rowsix[i] == (1,0):
+            correctrowsix.append((1,0))
+        elif rowsix[i] == (2,0):
+            correctrowsix.append((0,1))
+        elif rowsix[i] == (3,2):
+            correctrowsix.append((1,1))
+    if len(correctrowsix)==6:
+        pcop = p.copy()
+        pcop.append(correctrowsix)
+        possible_pairs[4].append(pcop)
+print("Number of full matrices: {}".format(len(possible_pairs[4])))
+txt2 = open("sixrows.txt","w", encoding="utf-8")
+for p in possible_pairs[4]:
+    txt2.write(display(p[0])+"\n")
+    txt2.write(display(p[1])+"\n")
+    txt2.write(display(p[2])+"\n")
+    txt2.write(display(p[3])+"\n")
+    txt2.write(display(p[4])+"\n")
+    txt2.write(display(p[5])+"\n")
+    txt2.write("\n")
+txt2.close()
+print("Written all matrices to `sixrows.txt'")
 
     
