@@ -59,6 +59,13 @@ def perm_check(v1,v2):
         vOut.append((*v1[i],*v2[i]))
     return sorted(vOut)
 
+def colpermcheck(mat):
+    vOut = []
+    for i in range(len(mat[0])):
+        vOut.append([mat[j][i] for j in range(len(mat))])
+    return sorted(vOut)
+
+    
 # multiplication of the actual tuples
 def mult(n,m):
     if n == (0,0):
@@ -186,20 +193,35 @@ for i in range(len(possible_pairs[3])):
         elif rowsix[i] == (3,2):
             correctrowsix.append((1,1))
     if len(correctrowsix)==6:
+        # Need to also check if this is normalized and orthogonal to all other rows
+        # Actuall looks like it already takes care of that, but will have to think about why
         pcop = p.copy()
         pcop.append(correctrowsix)
         possible_pairs[4].append(pcop)
 print("Number of full matrices: {}".format(len(possible_pairs[4])))
-txt2 = open("sixrows.txt","w", encoding="utf-8")
+#txt2 = open("sixrows.txt","w", encoding="utf-8")
+txt3 = open("sixrowsnopermrepeats.txt", "w", encoding="utf-8")
+rowperms = []
+colperms = []
 for p in possible_pairs[4]:
-    txt2.write(display(p[0])+"\n")
-    txt2.write(display(p[1])+"\n")
-    txt2.write(display(p[2])+"\n")
-    txt2.write(display(p[3])+"\n")
-    txt2.write(display(p[4])+"\n")
-    txt2.write(display(p[5])+"\n")
-    txt2.write("\n")
-txt2.close()
+#    txt2.write(display(p[0])+"\n")
+#    txt2.write(display(p[1])+"\n")
+#    txt2.write(display(p[2])+"\n")
+#    txt2.write(display(p[3])+"\n")
+#    txt2.write(display(p[4])+"\n")
+#    txt2.write(display(p[5])+"\n")
+#    txt2.write("\n")
+# Checking for permutations, but only row and columns separately. Maybe we want to check for all permutations, that is compositions of the two categories?
+# Will think about later
+    if sorted(p) not in rowperms:
+        rowperms.append(sorted(p))
+        if colpermcheck(p) not in colperms:
+            colperms.append(colpermcheck(p))
+            for i in range(len(p)):
+                txt3.write(display(p[i])+"\n")
+            txt3.write("\n")
+print(len(rowperms))
+txt3.close()
 print("Written all matrices to `sixrows.txt'")
 
     
