@@ -93,14 +93,6 @@ def pairwise(v1,v2):
     return sorted(vOut)
 
 
-def colpermcheck(mat):
-    vOut = []
-    truevOut = []
-    for i in range(len(mat[0])):
-        vOut.append([mat[j][i] for j in range(len(mat))])
-    for i in range(len(sorted(vOut)[0])):
-        truevOut.append([sorted(vOut)[j][i] for j in range(len(sorted(vOut)))])
-    return(sorted(truevOut))
 
 
 # multiplication of the actual tuples
@@ -151,8 +143,9 @@ uniqueness_check = [[],[],[],[]]
 # Gives possible pairs and triplets of vectors
 
 for i in range(len(normalized_vects)):
+    print("number of pairs: {}".format(len(possible_pairs[0])))
     for j in range(i, len(normalized_vects)):
-        print(len(possible_pairs[1]))
+        print("number of triples: {}".format(len(possible_pairs[1])))
         uniqueness_check[0]= []
         perms = list(list(p) for p in set(s for s in list(permutations(normalized_vects[j]))))
         for perm in perms:
@@ -174,7 +167,7 @@ for i in range(len(normalized_vects)):
                     # Does same for triplets etc.
                 if notperm:
                     for k in range(j, len(normalized_vects)):
-                        print(len(possible_pairs[2]))
+                        print("number of quadruples: {}".format(len(possible_pairs[2])))
 
                         perms2 = list(list(p) for p in set(s for s in list(permutations(normalized_vects[k]))))
                         uniqueness_check[1]=[]
@@ -212,15 +205,22 @@ for i in range(len(normalized_vects)):
                                                         uniqueness_check[2].append(colpermcheck([normalized_vects[i],perm, p, p1]))
                                                         possible_pairs[2].append([normalized_vects[i], perm, p, p1])
                                                         notperm3 = True
-##                                                    for m in range(l, len(normalized_vects)):
-##                                                        perms4 = list(list(p) for p in set(s for s in list(permutations(normalized_vects[m]))))
-##                                                        uniqueness_check[3]=[]
-##                                                        for p2 in perms4:
-##                                                            if dot(normalized_vects[i],p2)[0]%2 == 0 and dot(normalized_vects[i],p2)[1]%2 == 0 and dot(perm,p2)[0]%2 == 0 and dot(perm,p2)[1]%2 == 0 \
-##                                                               and dot(p,p2)[0]%2 == 0 and dot(p,p2)[1]%2 == 0 and dot(p1,p2)[0]%2==0 and dot(p1,p2)[1]%2==0:
-##                                                                if permequivclass([normalized_vects[i], perm, p, p1, p2]) not in uniqueness_check[3]:
-##                                                                    uniqueness_check[3].append(permequivclass([normalized_vects[i], perm, p, p1, p2]))
-##                                                                    possible_pairs[3].append([normalized_vects[i],list(perm), list(p), list(p1), list(p2)])
+                                                if notperm3:
+                                                    for m in range(l, len(normalized_vects)):
+                                                        perms4 = list(list(p) for p in set(s for s in list(permutations(normalized_vects[m]))))
+                                                        uniqueness_check[3]=[]
+                                                        for p2 in perms4:
+                                                            if dot(normalized_vects[i],p2)[0]%2 == 0 and dot(normalized_vects[i],p2)[1]%2 == 0 and dot(perm,p2)[0]%2 == 0 and dot(perm,p2)[1]%2 == 0 \
+                                                               and dot(p,p2)[0]%2 == 0 and dot(p,p2)[1]%2 == 0 and dot(p1,p2)[0]%2==0 and dot(p1,p2)[1]%2==0:
+                                                                if k == m:
+                                                                    if [normalized_vects[i], perm, p, p1, p2] not in uniqueness_check[3]:
+                                                                        for plele in permgenerator([normalized_vects[i], perm, p, p1]):
+                                                                            uniqueness_check[3].append(plele)
+                                                                        possible_pairs[3].append([normalized_vects[i], perm, p, p1, p2])
+                                                                else:
+                                                                    if colpermcheck([normalized_vects[i], perm, p, p1, p2]) not in uniqueness_check[3]:
+                                                                        uniqueness_check[3].append(colpermcheck([normalized_vects[i],perm, p, p1, p2]))
+                                                                        possible_pairs[3].append([normalized_vects[i], perm, p, p1, p2])
 
 
 ##for p in possible_pairs[0]:
