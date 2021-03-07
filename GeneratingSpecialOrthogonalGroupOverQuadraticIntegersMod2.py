@@ -287,6 +287,8 @@ for i in range(len(normalized_vects)):
                                                                     possible_pairs[3].append([normalized_vects[i],perm, p, p1, p2])
 
 
+#NEED TO CHECK IF COLUMNS ARE PERPENDICULAR
+
 
 ##for p in possible_pairs[1]:
 ##    print(display(p[0]))
