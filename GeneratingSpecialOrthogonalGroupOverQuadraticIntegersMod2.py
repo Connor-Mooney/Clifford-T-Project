@@ -341,19 +341,19 @@ for i in range(len(possible_pairs[3])):
         pcop.append(correctrowsix)
         possible_pairs[4].append(pcop)
 print("Number of full matrices: {}".format(len(possible_pairs[4])))
-#txt2 = open("sixrows.txt","w", encoding="utf-8")
-##txt3 = open("sixrowsnopermrepeats.txt", "w", encoding="utf-8")
+txt2 = open("sixrows.txt","w", encoding="utf-8")
+txt3 = open("sixrowsnopermrepeats.txt", "w", encoding="utf-8")
 ##txt4 = open("6rowsnoperms2.txt", "w", encoding="utf-8")
 genperms = []
 for p in possible_pairs[4]:
     already = False
-##    txt2.write(display(p[0])+"\n")
-##    txt2.write(display(p[1])+"\n")
-##    txt2.write(display(p[2])+"\n")
-##    txt2.write(display(p[3])+"\n")
-##    txt2.write(display(p[4])+"\n")
-##    txt2.write(display(p[5])+"\n")
-##    txt2.write("\n")
+    txt2.write(display(p[0])+"\n")
+    txt2.write(display(p[1])+"\n")
+    txt2.write(display(p[2])+"\n")
+    txt2.write(display(p[3])+"\n")
+    txt2.write(display(p[4])+"\n")
+    txt2.write(display(p[5])+"\n")
+    txt2.write("\n")
 # Checking for permutations, but only row and columns separately. Maybe we want to check for all permutations, that is compositions of the two categories?
 # Will think about later
 ##    if sorted(p) not in rowperms:
@@ -369,6 +369,15 @@ for p in possible_pairs[4]:
     if not already:
         genperms.append(p)
         print(len(genperms))
+
+for p in genperms:
+    txt3.write(display(p[0])+"\n")
+    txt3.write(display(p[1])+"\n")
+    txt3.write(display(p[2])+"\n")
+    txt3.write(display(p[3])+"\n")
+    txt3.write(display(p[4])+"\n")
+    txt3.write(display(p[5])+"\n")
+    txt3.write("\n")
 
 nopair = []
 onepair = []
@@ -391,6 +400,8 @@ print(len(twopair))
 print(len(threepair))
 print("\n")
 print(len(genperms))
+txt2.close()
+txt3.close()
 #txt4.close()
 print("Written all matrices to `sixrows.txt'")
 
