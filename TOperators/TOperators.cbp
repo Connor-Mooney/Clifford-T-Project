@@ -31,6 +31,11 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="SO6.cpp" />
+		<Unit filename="SO6.hpp" />
+		<Unit filename="Z2.cpp" />
+		<Unit filename="Z2.hpp" />
+		<Unit filename="main.cpp" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

@@ -16,10 +16,12 @@ Z2::Z2(){
 }
 
 int& Z2::operator[](int i){
+    //returns ith component of val
     return val[i];
 }
 
 const int& Z2::operator[](int i) const{
+    //does the same but for const Z2
     return val[i];
 }
 
@@ -43,13 +45,13 @@ Z2& Z2::operator+=(Z2& other){
     return *this;
 }
 
-    Z2 Z2::operator-(Z2& other){
-        int k = std::max(val[2], other[2]);
-        int* scaled0 = scale(k);
-        int* scaled1 = other.scale(k);
-        Z2 subtraction = Z2(scaled0[0]-scaled1[0], scaled0[1]-scaled1[1], k);
-        return subtraction;
-    }
+Z2 Z2::operator-(Z2& other){
+    int k = std::max(val[2], other[2]);
+    int* scaled0 = scale(k);
+    int* scaled1 = other.scale(k);
+    Z2 subtraction = Z2(scaled0[0]-scaled1[0], scaled0[1]-scaled1[1], k);
+    return subtraction;
+}
 
 Z2 Z2::operator*(const Z2& other){
     return Z2(val[0]*other[0]+2*val[1]*other[1], val[0]*other[1]+val[1]*other[0], val[2]+other[2]);
@@ -59,6 +61,7 @@ bool Z2::operator==(const Z2& other){
 }
 
 Z2& Z2::operator=(const Z2& other){
+    //assigns an operator
     val[0] = other[0];
     val[1] = other[1];
     val[2] = other[2];
@@ -66,6 +69,7 @@ Z2& Z2::operator=(const Z2& other){
 }
 
 Z2& Z2::reduce(){
+    // reduces a Z2 to its lowest denominator exponent expression
     while(val[0]%2 == 0 && val[1]%2 == 0 && val[2]>0){
         val[0] >>= 1;
         val[1] >>= 1;
@@ -80,6 +84,7 @@ Z2& Z2::reduce(){
 }
 
 int* Z2::scale(const int& k){
+    // scales a Z2's entries to a given denominator exponent
     int expdiff = k - val[2];
     reg[0] = val[0] << expdiff;
     reg[1] = val[1] << expdiff;

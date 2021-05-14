@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1620964730 source:c:\users\connor mooney\documents\toperators\main.cpp
+1621002788 source:c:\users\connor mooney\documents\toperators\main.cpp
 	<algorithm>
 	<iostream>
 	<vector>
@@ -10,7 +10,7 @@
 
 1620964784 c:\users\connor mooney\documents\toperators\so6.hpp
 
-1620964838 source:c:\users\connor mooney\documents\toperators\so6.cpp
+1621002020 source:c:\users\connor mooney\documents\toperators\so6.cpp
 	<algorithm>
 	<iostream>
 	<vector>
