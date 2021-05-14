@@ -23,34 +23,6 @@ def colpermcheck(m):
     """returns the column-permutation invariant normal form of a matrix"""
     return transpose(sorted(transpose(m)))
 
-def isperm(m, n):
-    # checking if they have the same rows
-    specialshapeformm = []
-    for row in m:
-        specialshapeformm.append(sorted(row))
-    specialshapeformm = sorted(specialshapeformm)
-    specialshapeformn = []
-    for row in n:
-        specialshapeformn.append(sorted(row))
-    specialshapeformn = sorted(specialshapeformn)
-    if specialshapeformn != specialshapeformm:
-        return False
-
-    # First, we find all the rows permutations of m
-    # We then sort all of them and see if the sorted form of n is in
-
-    perms = list(permutations(m))
-    permsnorepeats = []
-    for p in perms:
-        permsnorepeats.append(p)
-        if p in permsnorepeats[0:-1]:
-            permsnorepeats.pop()
-    for i in range(len(permsnorepeats)):
-        permsnorepeats[i] = transpose(sorted(transpose(permsnorepeats[i])))
-    if transpose(sorted(transpose(n))) in permsnorepeats:
-        return True
-    else:
-        return False
 
 def CliffCheck(m):
     cliff = True
@@ -65,6 +37,22 @@ def lengthnormalizer(strd, num):
     for i in range(num-len(strd)):
         s = s + " "
     return s
+
+def isperm(mat1, mat2):
+    check = matmult(transpose(mat1), mat2)
+    i = 0
+    j = 0
+    cols = [0,1,2,3,4,5]
+    while i<6:
+        if check[i][cols[j]] not in [(0,0,0),(1,0,0),(-1,0,0)]:
+            return False
+        elif check[i][cols[j]] == (0,0,0) and (j<len(cols)-1):
+            j = j+1
+        else:
+            i = i+1
+            cols.pop(j)
+            j = 0
+    return True
 
 # WILL IMPROVE LATER
 def tupledisplay(tup):
@@ -209,6 +197,8 @@ def residue(m):
             residues[i][j] = (entry[0]%2, entry[1]%2)
     return residues
 
+
+# NEED TO UPDATE
 def Tmat(i, j):
     """Returns T_{ij} after mapped to SO_6(Z[1/sqrt(2))"""
     Ttoreturn = copy.deepcopy(zeroMat)
@@ -244,19 +234,34 @@ txt = open("patterns.txt","w", encoding="utf-8")
 
 for i in range(len(Ts)):
     tcountpatterns[0].append((Ts[i], Tlabels[i]))
-    allmats.append(colpermcheck(Ts[i]))
+    allmats.append(Ts[i])
     txt.write(fileoutput(Ts[i], 1, Tlabels[i]))
 
-for j in range(1,5):
+print(len(tcountpatterns[0]))
+
+# NEED TO REVAMP THIS CODE
+for j in range(1,3):
     for i in range(len(Ts)):
         for tup in tcountpatterns[j-1]:
             # Checks if it's not a column permutation
-            if colpermcheck(matmult(tup[0],Ts[i])) not in allmats:
-                # Checks if it's not a clifford matrix
-                if not CliffCheck(matmult(tup[0],Ts[i])):
-                    tcountpatterns[j].append((matmult(tup[0],Ts[i]), tup[1]+Tlabels[i]))
-                    allmats.append(colpermcheck(matmult(tup[0],Ts[i])))
+            prod = matmult(tup[0], Ts[i])
+            if not CliffCheck(prod):
+                perm = False
+                for m in allmats:
+                    if isperm(m, prod):
+                        perm = True
+                if not perm:
+                    tcountpatterns[j].append((prod, tup[1]+Tlabels[i]))
+                    allmats.append(prod)
                     txt.write(fileoutput(tup[0],j+1, tup[1]+Tlabels[i]))
+
+    print(len(tcountpatterns[j]))
+##            if colpermcheck(matmult(tup[0],Ts[i])) not in allmats:
+##                # Checks if it's not a clifford matrix
+##                if not CliffCheck(matmult(tup[0],Ts[i])):
+##                    tcountpatterns[j].append((matmult(tup[0],Ts[i]), tup[1]+Tlabels[i]))
+##                    allmats.append(colpermcheck(matmult(tup[0],Ts[i])))
+##                    txt.write(fileoutput(tup[0],j+1, tup[1]+Tlabels[i]))
 
 for row in tcountpatterns:
     print(len(row))

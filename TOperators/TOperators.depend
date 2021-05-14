@@ -1,0 +1,24 @@
+# depslib dependency file v1.0
+1620964730 source:c:\users\connor mooney\documents\toperators\main.cpp
+	<algorithm>
+	<iostream>
+	<vector>
+	"Z2.hpp"
+	"SO6.hpp"
+
+1620956033 c:\users\connor mooney\documents\toperators\z2.hpp
+
+1620964784 c:\users\connor mooney\documents\toperators\so6.hpp
+
+1620964838 source:c:\users\connor mooney\documents\toperators\so6.cpp
+	<algorithm>
+	<iostream>
+	<vector>
+	"Z2.hpp"
+	"SO6.hpp"
+
+1620946041 source:c:\users\connor mooney\documents\toperators\z2.cpp
+	<algorithm>
+	<iostream>
+	"Z2.hpp"
+
