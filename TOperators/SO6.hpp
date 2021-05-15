@@ -1,13 +1,19 @@
 
 class SO6{
 public:
-    SO6(); //initializes zero matrix
-    SO6(Z2[6][6]); //initializes matrix according to a 6x6 array of Z2
+    SO6();
+    SO6(std::string); //initializes zero matrix
+    SO6(Z2[6][6], std::string); //initializes matrix according to a 6x6 array of Z2
     SO6 operator*(SO6&); //mutliplication
-    Z2& operator()(int, int); //indexing
-    const Z2& operator()(int, int) const; //indexing for constant SO6
+    inline Z2& operator()(int i, int j){return arr[i][j];} //returns the (i,j)th entry
+    inline const Z2& operator()(int i, int j) const{return arr[i][j];} //returns the (i,j)th entry but for const
     bool operator==(SO6&); //checking equality up to signed permutation
+    inline std::string getName(){return(name);}
+    inline int getLDE(){return(LDE);}
+    void genLDE();
     friend std::ostream& operator<<(std::ostream&,const SO6&); //display
 private:
     Z2 arr[6][6];
+    std::string name;
+    int LDE;
 };

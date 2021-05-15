@@ -6,7 +6,7 @@
 
 SO6 tMatrix(int i, int j){
     // Generates the T Matrix T[i+1, j+1]
-    SO6 t;
+    SO6 t("T("+std::to_string(i)+","+std::to_string(j)+")");
     int sign;
     if((i+1==j&&i<=4&&i>=0)||(j+1==i&&j<=4&&j>=0))
         sign = 1;
@@ -62,6 +62,7 @@ int main(){
     //generating t count 2
     //for some reason this generates 166 as opposed to 165
     //the weird thing is that the higher t counts all agree perfectly with Andrew
+    //The reason is that it doesn't catch the first operator which is just a clifford operator
     std::vector<SO6> t2;
     SO6 prod;
     for(int i = 0; i<15; i++){
@@ -79,7 +80,7 @@ int main(){
     for(int i = 0; i<15; i++){
         for(SO6 m : t2){
             prod = ts[i]*m;
-            if((!containedIn(ts, prod))&&(!containedIn(t2,prod))&&(!containedIn(t3,prod)))
+            if((!containedIn(ts, prod))&&(!containedIn(t3,prod)))
                 t3.push_back(prod);
         }
     }
@@ -93,7 +94,7 @@ int main(){
         std::cout<<i<<"\n";
         for(SO6 m : t3){
             prod = ts[i]*m;
-            if((!containedIn(ts, prod))&&(!containedIn(t2,prod))&&(!containedIn(t3,prod))&&(!containedIn(t4,prod)))
+            if((!containedIn(t2,prod))&&(!containedIn(t4,prod)))
                 t4.push_back(prod);
         }
     }

@@ -15,17 +15,6 @@ Z2::Z2(){
     val[2] = 0;
 }
 
-int& Z2::operator[](int i){
-    //returns ith component of val
-    return val[i];
-}
-
-const int& Z2::operator[](int i) const{
-    //does the same but for const Z2
-    return val[i];
-}
-
-
 Z2 Z2::operator+(Z2& other){
     int k = std::max(val[2], other[2]);
     int* scaled0 = scale(k);

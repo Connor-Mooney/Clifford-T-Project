@@ -240,7 +240,7 @@ for i in range(len(Ts)):
 print(len(tcountpatterns[0]))
 
 # NEED TO REVAMP THIS CODE
-for j in range(1,3):
+for j in range(1,2):
     for i in range(len(Ts)):
         for tup in tcountpatterns[j-1]:
             # Checks if it's not a column permutation

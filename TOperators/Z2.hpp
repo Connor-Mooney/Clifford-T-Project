@@ -4,8 +4,8 @@ class Z2{
 public:
     Z2(int, int, int); // the ints paseed form the entries of val
     Z2();// the entries of val are all 0
-    int& operator[](int); //index accessor for non-constant Z2s
-    const int& operator[](int) const; //index accessor function for constant Z2s
+    inline int& operator[](int i){return val[i];} //returns ith component of val
+    inline const int& operator[](int i) const{return val[i];} //does the same but for const Z2
     Z2 operator+(Z2&); //handles addition
     Z2& operator+=(Z2&); //handles +=
     Z2 operator-(Z2&); //handles subtraction

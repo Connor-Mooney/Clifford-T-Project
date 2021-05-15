@@ -5,24 +5,36 @@
 #include "SO6.hpp"
 
 SO6::SO6(){
+    for(int i=0; i<6; i++){
+        for(int j=0; j<6; j++)
+            arr[i][j]=Z2();
+    }
+    genLDE();
+}
+
+SO6::SO6(std::string n){
+    name = n;
     //initializes all entries as 0
     for(int i=0; i<6; i++){
         for(int j=0; j<6; j++)
             arr[i][j]=Z2();
     }
+    genLDE();
 }
 
-SO6::SO6(Z2 a[6][6]){
+SO6::SO6(Z2 a[6][6], std::string n){
+    name = n;
     //initializes SO6's entries according to a
     for(int i = 0; i<6; i++){
         for(int j = 0; j<6; j++)
             arr[i][j] = a[i][j];
     }
+    genLDE();
 }
 
 SO6 SO6::operator*(SO6& other){
     //multiplies operators
-    SO6 prod;
+    SO6 prod(name + other.getName());
     Z2 next;
     for(int i=0; i<6; i++){
         for(int j = 0; j<6; j++){
@@ -35,19 +47,16 @@ SO6 SO6::operator*(SO6& other){
     return prod;
 }
 
-Z2& SO6::operator()(int i, int j){
-    //returns the (i,j)th entry
-    return arr[i][j];
-}
 
-const Z2& SO6::operator()(int i, int j) const{
-    //returns the (i,j)th entry but for const
-    return arr[i][j];
-}
 
 bool SO6::operator==(SO6& other){
     //checks for equality up to signed column permutations
     //based on Andrew's method
+
+    //checking LDE
+    if(LDE != other.getLDE())
+        return(false);
+    //checking if this^dagger * other is a generalized perm matrix
     Z2 entry;
     std::vector<int> cols{0,1,2,3,4,5};
     int i = 0;
@@ -71,6 +80,16 @@ bool SO6::operator==(SO6& other){
         }
     }
     return(true);
+}
+
+void SO6::genLDE(){
+    int maximum = 0;
+    for(int i = 0; i<6; i++){
+        for(int j = 0; j<6; j++){
+            maximum = std::max(arr[i][j][2],maximum);
+        }
+    }
+    LDE = maximum;
 }
 
 std::ostream& operator<<(std::ostream& os, const SO6& m){
