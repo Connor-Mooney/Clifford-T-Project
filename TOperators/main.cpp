@@ -43,7 +43,20 @@ bool containedIn(std::vector<SO6>& v, SO6& entry){
     return(false);
 }
 
-
+std::vector<SO6>* genProds(std::vector<SO6> oneLDE, int tCount, SO6 tmats[15]){
+    // Takes one strata of LDEs from T count tCount, and multiplies by all T-count 1 matrices
+    // Does NOT check for permutation
+    int numLDES = tCount+2;
+    SO6 prod;
+    std::vector<SO6> toReturn[numLDES];
+    for(int i = 0; i<15; i++){
+        for(SO6 m : oneLDE){
+            prod = tmats[i]*m;
+            toReturn[prod.getLDE()].push_back(prod);
+        }
+    }
+    return(toReturn);
+}
 
 int main(){
     //generating list of T matrices
