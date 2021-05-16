@@ -19,6 +19,7 @@ SO6 tMatrix(int i, int j){
     t(i,j) = Z2(0,-sign, 1);
     t(j,i) = Z2(0, sign, 1);
     t(j,j) = Z2(0,1,1);
+    t.genLDE();
     return(t);
 }
 
@@ -42,6 +43,8 @@ bool containedIn(std::vector<SO6>& v, SO6& entry){
     return(false);
 }
 
+
+
 int main(){
     //generating list of T matrices
     //in the order Andrew wanted
@@ -58,49 +61,74 @@ int main(){
         else
             ts[i] = tMatrix(4,5);
     }
+    std::cout<<"Generated T count 1 \n";
 
     //generating t count 2
     //for some reason this generates 166 as opposed to 165
     //the weird thing is that the higher t counts all agree perfectly with Andrew
     //The reason is that it doesn't catch the first operator which is just a clifford operator
-    std::vector<SO6> t2;
+    std::vector<SO6> t2[3];
     SO6 prod;
     for(int i = 0; i<15; i++){
         for(int j = 0; j<15; j++){
             prod = ts[i]*ts[j];
-            if((!containedIn(ts, prod))&&(!containedIn(t2,prod))){
-                t2.push_back(prod);
+            int LDEIndex = prod.getLDE();
+            if((!containedIn(ts, prod))&&(!containedIn(t2[LDEIndex],prod))){
+                t2[LDEIndex].push_back(prod);
             }
         }
     }
-    std::cout<<t2.size()<<"\n";
+    std::cout<<"Generated T Count 2 \n";
+    std::cout<<"LDE 0:"<<t2[0].size()<<"\n";
+    std::cout<<"LDE 1:"<<t2[1].size()<<"\n";
+    std::cout<<"LDE 2:"<<t2[2].size()<<"\n";
 
     //generating t count 3
-    std::vector<SO6> t3;
-    for(int i = 0; i<15; i++){
-        for(SO6 m : t2){
-            prod = ts[i]*m;
-            if((!containedIn(ts, prod))&&(!containedIn(t3,prod)))
-                t3.push_back(prod);
+    std::vector<SO6> t3[4];
+    for(int j = 0; j<3; j++){
+        for(int i = 0; i<15; i++){
+            for(SO6 m : t2[j]){
+                prod = ts[i]*m;
+                int LDEIndex = prod.getLDE();
+                if((!containedIn(ts, prod))&&(!containedIn(t3[LDEIndex],prod)))
+                    t3[LDEIndex].push_back(prod);
+            }
         }
     }
-    std::cout<<t3.size()<<"\n";
+    std::cout<<"Generated T Count 3 \n";
+    std::cout<<"LDE 0:"<<t3[0].size()<<"\n";
+    std::cout<<"LDE 1:"<<t3[1].size()<<"\n";
+    std::cout<<"LDE 2:"<<t3[2].size()<<"\n";
+    std::cout<<"LDE 3:"<<t3[3].size()<<"\n";
+
 
     //generating t count 4
     //this step takes something in the order of 100 times longer,
-    //need to figure out how to streamline that
-    std::vector<SO6> t4;
-    for(int i = 0; i<15; i++){
-        std::cout<<i<<"\n";
-        for(SO6 m : t3){
-            prod = ts[i]*m;
-            if((!containedIn(t2,prod))&&(!containedIn(t4,prod)))
-                t4.push_back(prod);
+    //Reduced runtime including this to ~3 minutes, but it goes from 3 seconds to get to T-Count 3
+    //to that for 4... not a good growth rate
+    std::vector<SO6> t4[5];
+    for(int j = 0; j<4; j++){
+        for(int i = 0; i<15; i++){
+            std::cout<<i<<"\n";
+            for(SO6 m : t3[j]){
+                prod = ts[i]*m;
+                int LDEIndex = prod.getLDE();
+                if((!containedIn(t2[LDEIndex],prod))&&(!containedIn(t4[LDEIndex],prod)))
+                    t4[LDEIndex].push_back(prod);
+            }
         }
     }
-    std::cout<<t4.size()<<"\n";
+    std::cout<<"Generated T Count 4 \n";
+    std::cout<<"LDE 0:"<<t4[0].size()<<"\n";
+    std::cout<<"LDE 1:"<<t4[1].size()<<"\n";
+    std::cout<<"LDE 2:"<<t4[2].size()<<"\n";
+    std::cout<<"LDE 3:"<<t4[3].size()<<"\n";
+    std::cout<<"LDE 3:"<<t4[4].size()<<"\n";
+
 
 
     return 0;
 }
+
+
 

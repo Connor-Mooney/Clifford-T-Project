@@ -5,10 +5,12 @@
 #include "SO6.hpp"
 
 SO6::SO6(){
+    name = "Zero Matrix";
     for(int i=0; i<6; i++){
         for(int j=0; j<6; j++)
             arr[i][j]=Z2();
     }
+
     genLDE();
 }
 
@@ -44,9 +46,9 @@ SO6 SO6::operator*(SO6& other){
             }
         }
     }
+    prod.genLDE();
     return prod;
 }
-
 
 
 bool SO6::operator==(SO6& other){

@@ -22,3 +22,26 @@
 	<iostream>
 	"Z2.hpp"
 
+1621190466 source:c:\users\connor mooney\clifford-t-project\toperators\so6.cpp
+	<algorithm>
+	<iostream>
+	<vector>
+	"Z2.hpp"
+	"SO6.hpp"
+
+1621093293 c:\users\connor mooney\clifford-t-project\toperators\z2.hpp
+
+1621190447 c:\users\connor mooney\clifford-t-project\toperators\so6.hpp
+
+1621093313 source:c:\users\connor mooney\clifford-t-project\toperators\z2.cpp
+	<algorithm>
+	<iostream>
+	"Z2.hpp"
+
+1621190781 source:c:\users\connor mooney\clifford-t-project\toperators\main.cpp
+	<algorithm>
+	<iostream>
+	<vector>
+	"Z2.hpp"
+	"SO6.hpp"
+
