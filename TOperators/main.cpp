@@ -74,7 +74,6 @@ std::vector<SO6> genPerms(std::vector<SO6>& oneLDE, int LDE, std::vector<std::ve
     }
     return(toReturn);
 }
-
 std::vector<std::vector<SO6>> mergedVect(std::vector<std::vector<SO6>>& a, std::vector<std::vector<SO6>>& b){
     std::vector<std::vector<SO6>> m;
     std::vector<SO6> u;
@@ -88,6 +87,28 @@ std::vector<std::vector<SO6>> mergedVect(std::vector<std::vector<SO6>>& a, std::
     }
     return(m);
 }
+
+
+std::vector<std::vector<SO6>> genAllProds(std::vector<std::vector<SO6>>& TminusOne, int tcount, std::vector<SO6>& tmats){
+    int numLDESBelow = tcount+1;
+    std::vector<std::vector<SO6>> toReturn(tcount+2);
+    std::vector<std::vector<SO6>> prods[numLDESBelow];
+    for(int i = 0; i<numLDESBelow; i++)
+        prods[i] = genProds(TminusOne[i], tcount, tmats);
+    for(int i = 0; i<numLDESBelow; i++)
+        toReturn = mergedVect(toReturn, prods[i]);
+    return(toReturn);
+}
+
+std::vector<std::vector<SO6>> genAllPerms(std::vector<std::vector<SO6>>& unReduced, std::vector<std::vector<std::vector<SO6>>>& lowerTs){
+    // Takes all strata
+    std::vector<std::vector<SO6>> toReturn;
+    for(int i = 0; i<unReduced.size(); i++)
+        toReturn.push_back(genPerms(unReduced[i], i, lowerTs));
+    return(toReturn);
+}
+
+
 
 int main(){
     //generating list of T matrices
@@ -113,29 +134,17 @@ int main(){
     //the weird thing is that the higher t counts all agree perfectly with Andrew
     //The reason is that it doesn't catch the first operator which is just a Clifford operator
     std::vector<std::vector<SO6>> t2;
-    t2 = genProds(ts, 1, ts);
-    t2[0] = genPerms(t2[0], 0, evens);
-    t2[1] = genPerms(t2[1], 1, evens);
-    t2[2] = genPerms(t2[2], 2, evens);
+    t2 = genAllProds(odds[0], 1, ts);
+    t2 = genAllPerms(t2, evens);
     std::cout<<"Generated T count 2 \n";
     std::cout<<"LDE 0:"<<t2[0].size()<<"\n";
     std::cout<<"LDE 1:"<<t2[1].size()<<"\n";
     std::cout<<"LDE 2:"<<t2[2].size()<<"\n";
     evens.push_back(t2);
     //generating t count 3
-    std::vector<std::vector<SO6>> t3(4);
-    std::vector<std::vector<SO6>> prods[4];
-    prods[0] = genProds(t2[0], 2, ts);
-    prods[1] = genProds(t2[1], 2, ts);
-    prods[2] = genProds(t2[2], 2, ts);
-    //some sort of error here
-    std::vector<std::vector<SO6>> merg(4);
-    merg = mergedVect(prods[0], prods[1]);
-    t3 = mergedVect(merg, prods[2]);
-    t3[0] = genPerms(t3[0], 0, odds);
-    t3[1] = genPerms(t3[1], 1, odds);
-    t3[2] = genPerms(t3[2], 2, odds);
-    t3[3] = genPerms(t3[3], 3, odds);
+    std::vector<std::vector<SO6>> t3;
+    t3 = genAllProds(t2, 2, ts);
+    t3 = genAllPerms(t3, odds);
     odds.push_back(t3);
 
     std::cout<<"Generated T Count 3 \n";
@@ -151,17 +160,9 @@ int main(){
     //Reduced runtime including this to ~3 minutes, but it goes from 3 seconds to get to T-Count 3
     //to that for 4... not a good growth rate
     std::vector<std::vector<SO6>> t4(5);
-    prods[0] = genProds(t3[0], 3, ts);
-    prods[1] = genProds(t3[1], 3, ts);
-    prods[2] = genProds(t3[2], 3, ts);
-    prods[3] = genProds(t3[3], 3, ts);
-    merg = mergedVect(prods[0], prods[1]);
-    merg = mergedVect(merg,prods[2]);
-    t4   = mergedVect(merg, prods[3]);
-    t4[0]= genPerms(t4[0], 0, evens);
-    t4[1]= genPerms(t4[1], 1, evens);
-    t4[2]= genPerms(t4[2], 2, evens);
-    t4[3]= genPerms(t4[3], 3, evens);
+    t4  = genAllProds(t3, 3, ts);
+    t4 = genAllPerms(t4, evens);
+    evens.push_back(t4);
     std::cout<<"Generated T Count 4 \n";
     std::cout<<"LDE 0:"<<t4[0].size()<<"\n";
     std::cout<<"LDE 1:"<<t4[1].size()<<"\n";
