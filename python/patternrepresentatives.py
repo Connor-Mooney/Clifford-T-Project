@@ -253,7 +253,7 @@ for j in range(1,2):
                 if not perm:
                     tcountpatterns[j].append((prod, tup[1]+Tlabels[i]))
                     allmats.append(prod)
-                    txt.write(fileoutput(tup[0],j+1, tup[1]+Tlabels[i]))
+                    txt.write(tup[1]+Tlabels[i])
 
     print(len(tcountpatterns[j]))
 ##            if colpermcheck(matmult(tup[0],Ts[i])) not in allmats:
