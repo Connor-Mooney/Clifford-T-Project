@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <thread>
+#include <future>
 #include "Z2.hpp"
 #include "SO6.hpp"
 
@@ -74,6 +76,8 @@ std::vector<SO6> genPerms(std::vector<SO6>& oneLDE, int LDE, std::vector<std::ve
     }
     return(toReturn);
 }
+
+
 std::vector<std::vector<SO6>> mergedVect(std::vector<std::vector<SO6>>& a, std::vector<std::vector<SO6>>& b){
     std::vector<std::vector<SO6>> m;
     std::vector<SO6> u;
@@ -93,8 +97,11 @@ std::vector<std::vector<SO6>> genAllProds(std::vector<std::vector<SO6>>& TminusO
     int numLDESBelow = tcount+1;
     std::vector<std::vector<SO6>> toReturn(tcount+2);
     std::vector<std::vector<SO6>> prods[numLDESBelow];
+    std::future<std::vector<std::vector<SO6>>> threads[numLDESBelow];
     for(int i = 0; i<numLDESBelow; i++)
-        prods[i] = genProds(TminusOne[i], tcount, tmats);
+        threads[i] = std::async(std::launch::async, genProds, std::ref(TminusOne[i]), tcount, std::ref(tmats));
+    for(int i = 0; i<numLDESBelow; i++)
+        prods[i] = threads[i].get();
     for(int i = 0; i<numLDESBelow; i++)
         toReturn = mergedVect(toReturn, prods[i]);
     return(toReturn);
