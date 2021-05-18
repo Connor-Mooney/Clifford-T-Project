@@ -110,8 +110,11 @@ std::vector<std::vector<SO6>> genAllProds(std::vector<std::vector<SO6>>& TminusO
 std::vector<std::vector<SO6>> genAllPerms(std::vector<std::vector<SO6>>& unReduced, std::vector<std::vector<std::vector<SO6>>>& lowerTs){
     // Takes all strata
     std::vector<std::vector<SO6>> toReturn;
+    std::future<std::vector<SO6>> threads[unReduced.size()];
     for(int i = 0; i<unReduced.size(); i++)
-        toReturn.push_back(genPerms(unReduced[i], i, lowerTs));
+        threads[i] = std::async(std::launch::async, genPerms, std::ref(unReduced[i]), i, std::ref(lowerTs));
+    for(int i = 0; i<unReduced.size(); i++)
+        toReturn.push_back(threads[i].get());
     return(toReturn);
 }
 
