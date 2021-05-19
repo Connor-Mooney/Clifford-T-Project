@@ -5,6 +5,7 @@
 #include <future>
 #include "Z2.hpp"
 #include "SO6.hpp"
+#include <iterator>
 
 SO6 tMatrix(int i, int j){
     // Generates the T Matrix T[i+1, j+1]
@@ -94,14 +95,15 @@ std::vector<std::vector<SO6>> mergedVect(std::vector<std::vector<SO6>>& a, std::
 
 
 std::vector<std::vector<SO6>> genAllProds(std::vector<std::vector<SO6>>& TminusOne, int tcount, std::vector<SO6>& tmats){
-    int numLDESBelow = tcount+1;
-    std::vector<std::vector<SO6>> toReturn(tcount+2);
+    int numLDESBelow = TminusOne.size();
     std::vector<std::vector<SO6>> prods[numLDESBelow];
     std::future<std::vector<std::vector<SO6>>> threads[numLDESBelow];
     for(int i = 0; i<numLDESBelow; i++)
         threads[i] = std::async(std::launch::async, genProds, std::ref(TminusOne[i]), tcount, std::ref(tmats));
-    for(int i = 0; i<numLDESBelow; i++)
+    for(int i = 0; i<numLDESBelow; i++){
         prods[i] = threads[i].get();
+    }
+    std::vector<std::vector<SO6>> toReturn(prods[0].size());
     for(int i = 0; i<numLDESBelow; i++)
         toReturn = mergedVect(toReturn, prods[i]);
     return(toReturn);

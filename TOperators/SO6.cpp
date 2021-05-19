@@ -88,7 +88,8 @@ void SO6::genLDE(){
     int maximum = 0;
     for(int i = 0; i<6; i++){
         for(int j = 0; j<6; j++){
-            maximum = std::max(arr[i][j][2],maximum);
+            LDE = arr[i][j].getLDE();
+            maximum = std::max(LDE,maximum);
         }
     }
     LDE = maximum;

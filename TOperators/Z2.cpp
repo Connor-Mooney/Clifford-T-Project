@@ -81,6 +81,18 @@ int* Z2::scale(const int& k){
     return reg;
 }
 
+int Z2::getLDE(){
+    reg[0] = val[0];
+    reg[1] = val[1];
+    reg[2] = 2*val[2];
+    while(reg[0]%2 == 0 && reg[2]>0){
+        reg[0] = reg[1];
+        reg[1] = reg[0] >>= 1;
+        --reg[2];
+    }
+    return(reg[2]);
+}
+
 std::ostream& operator<<(std::ostream& os, const Z2& z){
     os << '(' << z[0] << '+' << z[1] << "*sqrt(2))/2^" << z[2];
     return os;
