@@ -8,9 +8,9 @@ public:
     inline Z2& operator()(int i, int j){return arr[i][j];} //returns the (i,j)th entry
     inline const Z2& operator()(int i, int j) const{return arr[i][j];} //returns the (i,j)th entry but for const
     bool operator==(SO6&); //checking equality up to signed permutation
-    inline std::string getName(){return(name);}
-    inline int getLDE(){return(LDE);}
-    void genLDE();
+    inline std::string getName(){return(name);} //getter for Name
+    inline int getLDE(){return(LDE);} //getter for LDE
+    void genLDE(); //generates LDE, called after multiplication and constructor
     friend std::ostream& operator<<(std::ostream&,const SO6&); //display
 private:
     Z2 arr[6][6];

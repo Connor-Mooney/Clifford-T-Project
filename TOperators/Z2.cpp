@@ -2,6 +2,12 @@
 #include <iostream>
 #include "Z2.hpp"
 
+/**
+ * Constructor that initializes object corresponding to (a+sqrt(2)*b)/(2^c)
+ * @param a integer part of numerator
+ * @param b sqrt(2) part of numerator
+ * @param c log_2 of the denominator
+ */
 Z2::Z2(int a, int b, int c){
     val[0] = a;
     val[1] = b;
@@ -9,6 +15,9 @@ Z2::Z2(int a, int b, int c){
     Z2::reduce();
 }
 
+/**
+ * Constructor to initialize Z2 corresponding to 0.
+ */
 Z2::Z2(){
     val[0] = 0;
     val[1] = 0;
@@ -81,6 +90,10 @@ int* Z2::scale(const int& k){
     return reg;
 }
 
+/**
+ * Gives the denominator exponent when this operator is reduced with sqrt(2) in the denominator
+ * @return exponent of sqrt(2) in reduced form of the operator
+ */
 int Z2::getLDE(){
     reg[0] = val[0];
     reg[1] = val[1];

@@ -15,7 +15,7 @@ public:
     Z2& reduce(); //auxiliary function to make sure every triad is in a consistent most reduced form
     int* scale(const int&); //auxiliary function to make sure that when addition is performed the exponents in the denominators are equal
     friend std::ostream& operator<<(std::ostream&,const Z2&); //display
-    int getLDE();
+    int getLDE(); //gives the denominator exponent of sqrt(2).
 private:
     int val[3]; //values of the Z2
     int reg[3]; //workspace array

@@ -4,8 +4,12 @@
 #include "Z2.hpp"
 #include "SO6.hpp"
 
+/**
+ * Basic constructor. Initializes Zero matrix.
+ *
+ */
 SO6::SO6(){
-    name = "Zero Matrix";
+    name = "0";
     for(int i=0; i<6; i++){
         for(int j=0; j<6; j++)
             arr[i][j]=Z2();
@@ -14,6 +18,10 @@ SO6::SO6(){
     genLDE();
 }
 
+/**
+ * Constructor that initializes zero matrix with arbitrary name
+ * @param n the name of the object
+ */
 SO6::SO6(std::string n){
     name = n;
     //initializes all entries as 0
@@ -24,6 +32,12 @@ SO6::SO6(std::string n){
     genLDE();
 }
 
+
+/**
+ * Constructor that initializes arbitrary matrix with arbitrary name
+ * @param a array of Z2 that the SO6 will take as values
+ * @param n the name of the object
+ */
 SO6::SO6(Z2 a[6][6], std::string n){
     name = n;
     //initializes SO6's entries according to a
@@ -34,6 +48,11 @@ SO6::SO6(Z2 a[6][6], std::string n){
     genLDE();
 }
 
+/**
+ * Overloads the * operator with matrix multiplication for SO6 objects
+ * @param other reference to SO6 to be multiplied with (*this)
+ * @return matrix multiplication of (*this) and other
+ */
 SO6 SO6::operator*(SO6& other){
     //multiplies operators
     SO6 prod(name + other.getName());
@@ -50,40 +69,36 @@ SO6 SO6::operator*(SO6& other){
     return prod;
 }
 
-
-bool SO6::operator==(SO6& other){
-    //checks for equality up to signed column permutations
-    //based on Andrew's method
-
-    //checking LDE
-    if(LDE != other.getLDE())
-        return(false);
-    //checking if this^dagger * other is a generalized perm matrix
-    Z2 entry;
-    std::vector<int> cols{0,1,2,3,4,5};
-    int i = 0;
-    int j = 0;
+/** overloads == method to check equality up to signed column permutation
+ *  @param other reference to SO6 to be checked against
+ *  @return whether or not (*this) and other are equivalent up to signed column permutation
+ */
+bool SO6::operator==(SO6 &other) {
+    // int tot;
+    bool flag;
+    Z2 dot_product;
     Z2 next;
-    while(i<6){
-        entry = Z2();
-        //entry is the (i,col(j))th element of (*this)^dagger * other
-        for(int k = 0; k<6; k++){
-                next = arr[i][k]*other(cols[j],k);
-                entry += next;
+    for(int i = 0; i < 6; i++) {
+        // tot = 0;
+        for(int j = 0; j < 6; j++) {
+            dot_product = Z2(0,0,0);
+            for(int k = 0; k <6; k++) {
+                next = arr[i][k]*other(j,k);
+                dot_product += next;
+            }
+            // if(dot_product.B != 0 || dot_product.K != 0) return false;
+            if(dot_product[2] != 0) return false;
+            // tot += (dot_product.A)*(dot_product.A);
+            // if(tot > 1) return false;
         }
-        if(!(entry==Z2()||entry==Z2(1,0,0)||entry==Z2(-1,0,0)))
-            return(false);
-        else if(entry==Z2()&& j<cols.size()-1)
-            j++;
-        else{
-            i++;
-            cols.erase(cols.begin()+j);
-            j=0;
-        }
+        // if(tot !=1) return false;
     }
-    return(true);
+    return true;
 }
 
+/**
+ * Generates LDE. Needs to be called any time the matrix is modified to make sure LDE stays current
+ */
 void SO6::genLDE(){
     int maximum = 0;
     for(int i = 0; i<6; i++){
@@ -95,6 +110,12 @@ void SO6::genLDE(){
     LDE = maximum;
 }
 
+/**
+ * Overloads << function for SO6.
+ * @param os reference to ostream object needed to implement <<
+ * @param m reference to SO6 object to be displayed
+ * @returns reference ostream with the matrix's display form appended
+ */
 std::ostream& operator<<(std::ostream& os, const SO6& m){
     for(int i = 0; i<6; i++){
         os << '[';

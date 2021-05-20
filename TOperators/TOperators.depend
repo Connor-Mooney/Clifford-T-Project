@@ -29,16 +29,16 @@
 	"Z2.hpp"
 	"SO6.hpp"
 
-1621435257 c:\users\connor mooney\clifford-t-project\toperators\z2.hpp
+1621445713 c:\users\connor mooney\clifford-t-project\toperators\z2.hpp
 
-1621190447 c:\users\connor mooney\clifford-t-project\toperators\so6.hpp
+1621445578 c:\users\connor mooney\clifford-t-project\toperators\so6.hpp
 
 1621435512 source:c:\users\connor mooney\clifford-t-project\toperators\z2.cpp
 	<algorithm>
 	<iostream>
 	"Z2.hpp"
 
-1621435147 source:c:\users\connor mooney\clifford-t-project\toperators\main.cpp
+1621452230 source:c:\users\connor mooney\clifford-t-project\toperators\main.cpp
 	<algorithm>
 	<iostream>
 	<vector>
@@ -46,5 +46,4 @@
 	<future>
 	"Z2.hpp"
 	"SO6.hpp"
-	<iterator>
 
