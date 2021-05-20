@@ -1,0 +1,3 @@
+C:/Users/Connor Mooney/Clifford-T-Project/TOperators/main.cpp:68: warning: argument 'a' from the argument list of mergedVect has multiple @param documentation sections
+C:/Users/Connor Mooney/Clifford-T-Project/TOperators/main.cpp:68: warning: The following parameter of mergedVect(std::vector< std::vector< SO6 >> &a, std::vector< std::vector< SO6 >> &b) is not documented:
+  parameter 'b'
