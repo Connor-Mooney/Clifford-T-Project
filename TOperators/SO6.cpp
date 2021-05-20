@@ -75,7 +75,7 @@ SO6 SO6::operator*(SO6& other){
  */
 bool SO6::operator==(SO6 &other) {
     // int tot;
-    bool flag;
+    // bool flag;
     Z2 dot_product;
     Z2 next;
     for(int i = 0; i < 6; i++) {
