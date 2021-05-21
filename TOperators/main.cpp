@@ -81,6 +81,49 @@ std::vector<std::vector<SO6>> mergedVect(std::vector<std::vector<SO6>>& a, std::
     return(m);
 }
 
+std::vector<SO6> mergedVect(std::vector<SO6>& a, std::vector<SO6>& b){
+    std::vector<SO6> m;
+    for(int i = 0; i<a.size(); i++)
+        m.push_back(a[i]);
+    for(int i = 0; i<b.size(); i++)
+        m.push_back(b[i]);
+    return m;
+}
+
+// Divides a vect of vects evenly over every LDE into numThreads vectors of vectors
+std::vector<std::vector<std::vector<SO6>>> divideVect(std::vector<std::vector<SO6>>& toDivide, int numThreads){
+    std::vector<std::vector<std::vector<SO6>>> toReturn(numThreads, std::vector<std::vector<SO6>>(toDivide.size()));
+    int numberthread;
+    int remaining;
+    for(int i = 0; i<toDivide.size(); i++){
+        numberthread = toDivide[i].size()/numThreads;
+        for(int j = 0; j<numThreads; j++){
+            for(int k = j*numberthread; k<(j+1)*numberthread; k++){
+                toReturn[j][i].push_back(toDivide[i][k]);
+            }
+        }
+        remaining = toDivide[i].size()-numberthread*numThreads;
+        for(int j = 0; j<remaining; j++){
+            toReturn[j][i].push_back(toDivide[i][numberthread*numThreads+j]);
+        }
+    }
+    return toReturn;
+}
+
+std::vector<std::vector<SO6>> divideVect(std::vector<SO6>& toDivide, int numThreads){
+    std::vector<std::vector<SO6>> toReturn(numThreads);
+    int numberPerThread = toDivide.size() / numThreads;
+    for(int i = 0; i<numThreads; i++){
+        for(int j = i*numberPerThread; j<(i+1)*numberPerThread; j++){
+            toReturn[i].push_back(toDivide[j]);
+        }
+    }
+    for(int i = numThreads*numberPerThread; i<toDivide.size(); i++)
+        toReturn[i-numThreads*numberPerThread].push_back(toDivide[i]);
+    return toReturn;
+}
+
+
 /**
  * multiplies every entry of a vector of SO6 with every entry of another vector, and returns it sorted by LDE
  * @param oneLDE vector of SO6
@@ -88,16 +131,18 @@ std::vector<std::vector<SO6>> mergedVect(std::vector<std::vector<SO6>>& a, std::
  * @param tmats another vector of SO6 to multiply, we will always pass it the vector of the 15 T-Count 1 matrices though
  * @return a vector of vectors of SO6, containing the products of elements of tCounts and oneLDE, sorted by LDE
  */
-std::vector<std::vector<SO6>> genProds(std::vector<SO6>& oneLDE, int tCount, std::vector<SO6>& tmats){
+std::vector<std::vector<SO6>> genProds(std::vector<std::vector<SO6>>& batch, std::vector<SO6>& tmats){
     // Takes one strata of LDEs from T count tCount, and multiplies by all T-count 1 matrices
     // Does NOT check for permutation
-    int numLDES = tCount+2;
+    int numLDES = batch.size()+1;
     SO6 prod;
     std::vector<std::vector<SO6>> toReturn(numLDES);
     for(int i = 0; i<15; i++){
-        for(SO6 m : oneLDE){
-            prod = tmats[i]*m;
-            toReturn[prod.getLDE()].push_back(prod);
+        for(int j = 0; j<batch.size(); j++){
+            for(SO6 m : batch[j]){
+                prod = tmats[i]*m;
+                toReturn[prod.getLDE()].push_back(prod);
+            }
         }
     }
     return(toReturn);
@@ -112,18 +157,18 @@ std::vector<std::vector<SO6>> genProds(std::vector<SO6>& oneLDE, int tCount, std
  * @param tmats the vector of SO6 whose elements will be multiplying those of TminusOne
  * @return the product of all elements of TminusOne and tmats, sorted by LDE
  */
-std::vector<std::vector<SO6>> genAllProds(std::vector<std::vector<SO6>>& TminusOne, int tcount, std::vector<SO6>& tmats){
-    int numLDESBelow = TminusOne.size();
-    std::vector<std::vector<SO6>> prods[numLDESBelow];
-    std::future<std::vector<std::vector<SO6>>> threads[numLDESBelow];
-    for(int i = 0; i<numLDESBelow; i++)
-        threads[i] = std::async(std::launch::async, genProds, std::ref(TminusOne[i]), tcount, std::ref(tmats));
-    for(int i = 0; i<numLDESBelow; i++){
-        prods[i] = threads[i].get();
+std::vector<std::vector<SO6>> genAllProds(std::vector<std::vector<SO6>>& TminusOne, std::vector<SO6>& tmats, int numThreads){
+    std::vector<std::vector<std::vector<SO6>>> threadinput = divideVect(TminusOne, numThreads);
+    std::future<std::vector<std::vector<SO6>>> threads[numThreads];
+    std::vector<std::vector<SO6>> prod[numThreads];
+    for(int i = 0; i<numThreads; i++)
+        threads[i] = std::async(std::launch::async, genProds, std::ref(threadinput[i]), std::ref(tmats));
+    for(int i = 0; i<numThreads; i++){
+        prod[i] = threads[i].get();
     }
-    std::vector<std::vector<SO6>> toReturn(prods[0].size());
-    for(int i = 0; i<numLDESBelow; i++)
-        toReturn = mergedVect(toReturn, prods[i]);
+    std::vector<std::vector<SO6>> toReturn(prod[0].size());
+    for(int i = 0; i<numThreads; i++)
+        toReturn = mergedVect(toReturn, prod[i]);
     return(toReturn);
 }
 
@@ -147,11 +192,11 @@ std::vector<std::vector<SO6>> genPerms(std::vector<std::vector<SO6>>& batch, std
             if(LDE<tMinusTwo.size()){
                 isPerm = isPerm || containedIn(tMinusTwo[LDE], m);
             }
+            isPerm = isPerm || containedIn(toReturn[LDE], m);
             if(!isPerm)
                 toReturn[LDE].push_back(m);
         }
     }
-    std::cout<<"Thread "<<numofthread<<" completed permutation checking. \n";
     return(toReturn);
 }
 
@@ -163,33 +208,15 @@ int getLength(std::vector<std::vector<SO6>>& input){
     return l;
 }
 
-// Divides a vect of vects evenly over every LDE into numThreads vectors of vectors
-std::vector<std::vector<std::vector<SO6>>> divideVect(std::vector<std::vector<SO6>>& toDivide, int numThreads){
-    std::vector<std::vector<std::vector<SO6>>> toReturn(numThreads, std::vector<std::vector<SO6>>(toDivide.size()));
-    int numberthread;
-    int remaining;
-    for(int i = 0; i<toDivide.size(); i++){
-        numberthread = toDivide[i].size()/numThreads;
-        for(int j = 0; j<numThreads; j++){
-            for(int k = j*numberthread; k<(j+1)*numberthread; k++){
-                toReturn[j][i].push_back(toDivide[i][k]);
-            }
-        }
-        remaining = toDivide[i].size()-numberthread*numThreads;
-        for(int j = 0; j<remaining; j++){
-            toReturn[j][i].push_back(toDivide[i][numberthread*numThreads+j]);
-        }
-    }
-    return toReturn;
-}
 
-std::vector<SO6> genPerm(std::vector<SO6>& vec){
+//Prunes a vector of SO6 for equivalent matrices
+std::vector<SO6> genPerm(std::vector<SO6>& vec, SO6& check){
     std::vector<SO6> toReturn;
     for(SO6 m : vec){
-        if(!containedIn(toReturn, m))
+        if(!(check==m)){
             toReturn.push_back(m);
+        }
     }
-    std::cout<<"thread completed \n";
     return toReturn;
 }
 
@@ -204,13 +231,10 @@ std::vector<SO6> genPerm(std::vector<SO6>& vec){
 std::vector<std::vector<SO6>> genAllPerms(std::vector<std::vector<SO6>>& unReduced, std::vector<std::vector<SO6>>& tMinusTwo, int numThreads){
     // Takes all strata
     std::vector<std::vector<SO6>> toReturn(unReduced.size());
-
-
     std::vector<std::vector<std::vector<SO6>>> threadinput = divideVect(unReduced, numThreads);
     std::future<std::vector<std::vector<SO6>>> threads[numThreads];
     std::vector<std::vector<SO6>> prod[numThreads];
     for(int i = 0; i<numThreads; i++){
-        std::cout<<getLength(threadinput[i])<<"\n";
         threads[i] = std::async(std::launch::async, genPerms, std::ref(threadinput[i]), std::ref(tMinusTwo), i);
     }
     for(int i = 0; i<numThreads; i++){
@@ -220,15 +244,27 @@ std::vector<std::vector<SO6>> genAllPerms(std::vector<std::vector<SO6>>& unReduc
     for(std::vector<std::vector<SO6>> v : prod){
         toReturn = mergedVect(toReturn, v);
     }
-    std::future<std::vector<SO6>> threads2[toReturn.size()];
+    std::future<std::vector<SO6>> threads2[numThreads];
+    std::vector<std::vector<SO6>> batches (numThreads);
+    std::vector<std::vector<SO6>> backs (toReturn.size());
     for(int i = 0; i<toReturn.size(); i++){
-        threads2[i] = std::async(std::launch::async, genPerm, std::ref(toReturn[i]));
+        //pop off back from every LDE
+        //Split remaining vector up
+        // check in parallel
+        while(toReturn[i].size()>0){
+            backs[i].push_back(toReturn[i].back());
+            toReturn[i].pop_back();
+            batches = divideVect(toReturn[i], numThreads);
+            for(int j = 0; j<numThreads; j++)
+                threads2[j] = std::async(std::launch::async, genPerm, std::ref(batches[j]), std::ref(backs[i].back()));
+            for(int j = 0; j<numThreads; j++)
+                batches[j] = threads2[j].get();
+            toReturn[i].clear();
+            for(int j = 0; j<numThreads; j++)
+                toReturn[i] = mergedVect(toReturn[i], batches[j]);
+        }
     }
-    for(int i = 0; i<toReturn.size(); i++){
-        toReturn[i] = threads2[i].get();
-    }
-
-    return toReturn;
+    return backs;
 }
 
 
@@ -260,7 +296,7 @@ int main(){
     //leaving it for now
     std::vector<std::vector<SO6>> t0;
     std::vector<std::vector<SO6>> t2;
-    t2 = genAllProds(t1, 1, ts);
+    t2 = genAllProds(t1, ts, 7);
     t2 = genAllPerms(t2, t0, 7);
     std::cout<<"Generated T count 2 \n";
     for(int i = 0; i<t2.size(); i++){
@@ -269,12 +305,7 @@ int main(){
 
     //generating t count 3
     std::vector<std::vector<SO6>> t3;
-    t3 = genAllProds(t2, 2, ts);
-    std::cout<<"Generated T Count 3 \n";
-    for(int i = 0; i<t3.size(); i++){
-        std::cout<<"LDE"<<i<<": "<<t3[i].size()<< "\n";
-    }
-
+    t3 = genAllProds(t2, ts, 7);
     t3 = genAllPerms(t3, t1, 7);
 
     std::cout<<"Generated T Count 3 \n";
@@ -288,7 +319,7 @@ int main(){
     //Reduced runtime including this to ~1-2 minutes, but it goes from 3 seconds to get to T-Count 3
     //to that for 4... not a good growth rate
     std::vector<std::vector<SO6>> t4(5);
-    t4  = genAllProds(t3, 3, ts);
+    t4  = genAllProds(t3, ts, 7);
     t4 = genAllPerms(t4, t2, 5);
     std::cout<<"Generated T Count 4 \n";
     for(int i = 0; i<t4.size(); i++){
