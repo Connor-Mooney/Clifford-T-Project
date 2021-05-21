@@ -135,22 +135,62 @@ std::vector<std::vector<SO6>> genAllProds(std::vector<std::vector<SO6>>& TminusO
  * @return a vector of all elements of oneLDE not equivalent up to signed column-permutation, to any elements of lowerTs
  */
 
-std::vector<SO6> genPerms(std::vector<SO6>& oneLDE, int LDE, std::vector<std::vector<std::vector<SO6>>>& lowerTs){
+std::vector<std::vector<SO6>> genPerms(std::vector<std::vector<SO6>>& batch, std::vector<std::vector<SO6>>& tMinusTwo, int numofthread){
     // Takes one strata of LDEs with LDE LDE, and then compares with relevant prior sets in lowerTs
-    std::vector<SO6> toReturn;
+    std::vector<std::vector<SO6>> toReturn(batch.size());
     bool isPerm;
-    for(SO6 m : oneLDE){
-        isPerm = false;
-        for(std::vector<std::vector<SO6>> matDist : lowerTs){
-            if(LDE<matDist.size())
-                isPerm = isPerm || containedIn(matDist[LDE],m);
+    int LDE;
+    for(int i = 0; i < batch.size(); i++){
+        for(SO6 m : batch[i]){
+            isPerm = false;
+            LDE = m.getLDE();
+            if(LDE<tMinusTwo.size()){
+                isPerm || containedIn(tMinusTwo[LDE], m);
+            }
+            if(!isPerm)
+                toReturn[LDE].push_back(m);
         }
-        isPerm = isPerm || containedIn(toReturn, m);
-        if(!isPerm)
+    }
+    std::cout<<"Thread "<<numofthread<<" completed permutation checking. \n";
+    return(toReturn);
+}
+
+int getLength(std::vector<std::vector<SO6>>& input){
+    int l = 0;
+    for(int i = 0; i<input.size(); i++){
+        l+= input[i].size();
+    }
+    return l;
+}
+
+// Divides a vect of vects evenly over every LDE into numThreads vectors of vectors
+std::vector<std::vector<std::vector<SO6>>> divideVect(std::vector<std::vector<SO6>>& toDivide, int numThreads){
+    std::vector<std::vector<std::vector<SO6>>> toReturn(numThreads, std::vector<std::vector<SO6>>(toDivide.size()));
+    int numberthread;
+    int remaining;
+    for(int i = 0; i<toDivide.size(); i++){
+        numberthread = toDivide[i].size()/numThreads;
+        for(int j = 0; j<numThreads; j++){
+            for(int k = j*numberthread; k<(j+1)*numperthread; k++){
+                toReturn[j][i].push_back(toDivide[i][k]);
+            }
+        }
+        remaining = toDivide[i].size()-numberthread*numThreads;
+        for(int j = 0; j<remaining; j++){
+            toReturn[j][i].push_back(toDivide[i][numberthread*numThreads+j]);
+        }
+    }
+    return toReturn;
+}
+
+std::vector<SO6> genPerm(std::vector<SO6>& vec){
+    std::vector<SO6> toReturn;
+    for(SO6 m : vec){
+        if(!containedIn(toReturn, m))
             toReturn.push_back(m);
     }
-    std::cout<<"Thread "<<LDE<<" completed permutation checking. \n";
-    return(toReturn);
+    std::cout<<"thread completed \n";
+    return toReturn;
 }
 
 /**
@@ -161,15 +201,30 @@ std::vector<SO6> genPerms(std::vector<SO6>& oneLDE, int LDE, std::vector<std::ve
  * @return a vector of vectors of SO6, broken out by LDE, of the unique elements of unReduced, up to signed column permutation
  */
 
-std::vector<std::vector<SO6>> genAllPerms(std::vector<std::vector<SO6>>& unReduced, std::vector<std::vector<std::vector<SO6>>>& lowerTs){
+std::vector<std::vector<SO6>> genAllPerms(std::vector<std::vector<SO6>>& unReduced, std::vector<std::vector<SO6>>& tMinusTwo, int numThreads){
     // Takes all strata
-    std::vector<std::vector<SO6>> toReturn;
-    std::future<std::vector<SO6>> threads[unReduced.size()];
-    for(int i = 0; i<unReduced.size(); i++)
-        threads[i] = std::async(std::launch::async, genPerms, std::ref(unReduced[i]), i, std::ref(lowerTs));
-    for(int i = 0; i<unReduced.size(); i++)
-        toReturn.push_back(threads[i].get());
-    return(toReturn);
+    std::vector<std::vector<std::vector<SO6>>> threadinput = divideVect(unReduced, numThreads);
+    std::future<std::vector<std::vector<SO6>>> threads[numThreads];
+    std::vector<std::vector<SO6>> prod[numThreads];
+    for(int i = 0; i<numThreads; i++){
+        std::cout<<getLength(threadinput[i])<<"\n";
+        threads[i] = std::async(std::launch::async, genPerms, std::ref(threadinput[i]), std::ref(tMinusTwo), i);
+    }
+    for(int i = 0; i<numThreads; i++){
+        prod[i] = threads[i].get();
+    }
+    std::vector<std::vector<SO6>> toReturn(prod[0].size());
+    for(std::vector<std::vector<SO6>> v : prod){
+        toReturn = mergedVect(toReturn, v);
+    }
+    std::future<std::vector<SO6>> threads2[toReturn.size()];
+    for(int i = 0; i<toReturn.size(); i++){
+        threads2[i] = std::async(std::launch::async, genPerm, std::ref(toReturn[i]));
+    }
+    for(int i = 0; i<toReturn.size(); i++){
+        toReturn[i] = threads2[i].get();
+    }
+    return toReturn;
 }
 
 
@@ -191,9 +246,7 @@ int main(){
             ts.push_back(tMatrix(4,5));
     }
     std::cout<<"Generated T count 1 \n";
-    std::vector<std::vector<std::vector<SO6>>> odds = std::vector<std::vector<std::vector<SO6>>>
-                                                        {std::vector<std::vector<SO6>>
-                                                            {std::vector<SO6>(), ts}}; //vector of the distributions of odd t-count matrices
+    std::vector<std::vector<SO6>> t1 = std::vector<std::vector<SO6>>{std::vector<SO6>(), ts}; //vector of the distributions of odd t-count matrices
     std::vector<std::vector<std::vector<SO6>>> evens(0); //vector of the distributions of even t-count matrices
 
     //generating t count 2
@@ -201,20 +254,24 @@ int main(){
     //the weird thing is that the higher t counts all agree perfectly with Andrew
     //The reason is that it doesn't catch the first operator which is just a Clifford operator
     //leaving it for now
+    std::vector<std::vector<SO6>> t0;
     std::vector<std::vector<SO6>> t2;
-    t2 = genAllProds(odds[0], 1, ts);
-    t2 = genAllPerms(t2, evens);
+    t2 = genAllProds(t1, 1, ts);
+    t2 = genAllPerms(t2, t0, 5);
     std::cout<<"Generated T count 2 \n";
     for(int i = 0; i<t2.size(); i++){
         std::cout<<"LDE"<<i<<": "<<t2[i].size()<< "\n";
     }
-    evens.push_back(t2);
 
     //generating t count 3
     std::vector<std::vector<SO6>> t3;
     t3 = genAllProds(t2, 2, ts);
-    t3 = genAllPerms(t3, odds);
-    odds.push_back(t3);
+    std::cout<<"Generated T Count 3 \n";
+    for(int i = 0; i<t3.size(); i++){
+        std::cout<<"LDE"<<i<<": "<<t3[i].size()<< "\n";
+    }
+
+    t3 = genAllPerms(t3, t1, 5);
 
     std::cout<<"Generated T Count 3 \n";
     for(int i = 0; i<t3.size(); i++){
@@ -229,7 +286,7 @@ int main(){
     //to that for 4... not a good growth rate
     std::vector<std::vector<SO6>> t4(5);
     t4  = genAllProds(t3, 3, ts);
-    t4 = genAllPerms(t4, evens);
+    t4 = genAllPerms(t4, t2, 5);
     evens.push_back(t4);
     std::cout<<"Generated T Count 4 \n";
     for(int i = 0; i<t4.size(); i++){
