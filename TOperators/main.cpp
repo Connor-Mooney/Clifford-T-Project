@@ -210,14 +210,16 @@ int getLength(std::vector<std::vector<SO6>>& input){
 
 
 //Prunes a vector of SO6 for equivalent matrices
-std::vector<SO6> genPerm(std::vector<SO6>& vec, SO6& check){
-    std::vector<SO6> toReturn;
-    for(SO6 m : vec){
-        if(!(check==m)){
-            toReturn.push_back(m);
+void genPerm(std::vector<SO6>& vec, SO6& check, int a, int b){
+    for(int i = a; i<b; i++){
+        if(check==vec[i]){
+            vec[i].setName("None");
         }
     }
-    return toReturn;
+}
+
+bool isNone(SO6& toCheck){
+    return(toCheck.getName()=="None");
 }
 
 /**
@@ -229,7 +231,8 @@ std::vector<SO6> genPerm(std::vector<SO6>& vec, SO6& check){
  */
 
 std::vector<std::vector<SO6>> genAllPerms(std::vector<std::vector<SO6>>& unReduced, std::vector<std::vector<SO6>>& tMinusTwo, int numThreads){
-    // Takes all strata
+    // Checking compared to tMinusTwo
+    // Works
     std::vector<std::vector<SO6>> toReturn(unReduced.size());
     std::vector<std::vector<std::vector<SO6>>> threadinput = divideVect(unReduced, numThreads);
     std::future<std::vector<std::vector<SO6>>> threads[numThreads];
@@ -244,27 +247,37 @@ std::vector<std::vector<SO6>> genAllPerms(std::vector<std::vector<SO6>>& unReduc
     for(std::vector<std::vector<SO6>> v : prod){
         toReturn = mergedVect(toReturn, v);
     }
-    std::future<std::vector<SO6>> threads2[numThreads];
-    std::vector<std::vector<SO6>> batches (numThreads);
-    std::vector<std::vector<SO6>> backs (toReturn.size());
+    std::cout<<toReturn[1].size();
+    // Self Checking. Not yet working
+    // For some reason the numbers change based on the number of threads
+    // Works with 1 thread, but breaks for more than that
+    std::thread threads2[numThreads];
+    int numPerThread;
+
+    //iterating over all LDEs
     for(int i = 0; i<toReturn.size(); i++){
-        //pop off back from every LDE
-        //Split remaining vector up
-        // check in parallel
-        while(toReturn[i].size()>0){
-            backs[i].push_back(toReturn[i].back());
-            toReturn[i].pop_back();
-            batches = divideVect(toReturn[i], numThreads);
-            for(int j = 0; j<numThreads; j++)
-                threads2[j] = std::async(std::launch::async, genPerm, std::ref(batches[j]), std::ref(backs[i].back()));
-            for(int j = 0; j<numThreads; j++)
-                batches[j] = threads2[j].get();
-            toReturn[i].clear();
-            for(int j = 0; j<numThreads; j++)
-                toReturn[i] = mergedVect(toReturn[i], batches[j]);
+        //iterating over all entries
+        for(int j = 0; j<toReturn[i].size(); j++){
+            //popping off entries marked as "None"
+            while(toReturn[i][j].getName() == "None" && (j<toReturn.size()-1)) ++j;
+            //determining how many elements per thread
+            //Looking at elements to the right of j and seeing if equivalent
+            numPerThread = (toReturn[i].size()-j-1)/numThreads;
+            //allocating to threads
+            //will turn equivalent matrices to "None" name
+            for(int k = 0; k<numThreads-1; k++){
+                threads2[k] = std::thread(genPerm, std::ref(toReturn[i]), std::ref(toReturn[i][j]), j+1+k*numPerThread, j+1+(k+1)*numPerThread);
+            }
+            threads2[numThreads-1] = std::thread(genPerm, std::ref(toReturn[i]), std::ref(toReturn[i][j]), j+1+numThreads*numPerThread, toReturn[i].size());
+            //waiting for all to be performed
+            for(int k = 0; k<numThreads; k++){
+                threads2[k].join();
+            }
         }
+        //Removes all "None" SO6s
+        toReturn[i].erase(std::remove_if(toReturn[i].begin(), toReturn[i].end(), isNone), toReturn[i].end());
     }
-    return backs;
+    return toReturn;
 }
 
 
@@ -294,49 +307,56 @@ int main(){
     //the weird thing is that the higher t counts all agree perfectly with Andrew
     //The reason is that it doesn't catch the first operator which is just a Clifford operator
     //leaving it for now
+    int numThreads;
+    std::cin>>numThreads;
     std::vector<std::vector<SO6>> t0;
     std::vector<std::vector<SO6>> t2;
-    t2 = genAllProds(t1, ts, 7);
-    t2 = genAllPerms(t2, t0, 7);
+    std::vector<std::vector<SO6>> t2s;
+    t2 = genAllProds(t1, ts, numThreads);
+    t2 = genAllPerms(t2, t0, numThreads);
     std::cout<<"Generated T count 2 \n";
     for(int i = 0; i<t2.size(); i++){
         std::cout<<"LDE"<<i<<": "<<t2[i].size()<< "\n";
     }
 
-    //generating t count 3
-    std::vector<std::vector<SO6>> t3;
-    t3 = genAllProds(t2, ts, 7);
-    t3 = genAllPerms(t3, t1, 7);
-
-    std::cout<<"Generated T Count 3 \n";
-    for(int i = 0; i<t3.size(); i++){
-        std::cout<<"LDE"<<i<<": "<<t3[i].size()<< "\n";
-    }
-
-
-    //generating t count 4
-    //this step takes something in the order of 100 times longer,
-    //Reduced runtime including this to ~1-2 minutes, but it goes from 3 seconds to get to T-Count 3
-    //to that for 4... not a good growth rate
-    std::vector<std::vector<SO6>> t4(5);
-    t4  = genAllProds(t3, ts, 7);
-    t4 = genAllPerms(t4, t2, 5);
-    std::cout<<"Generated T Count 4 \n";
-    for(int i = 0; i<t4.size(); i++){
-        std::cout<<"LDE"<<i<<": "<<t4[i].size()<< "\n";
-    }
+//    //generating t count 3
+//    std::vector<std::vector<SO6>> t3;
+//    t3 = genAllProds(t2, ts, 7);
+//    t3 = genAllPerms(t3, t1, 7);
 //
-//    std::vector<std::vector<SO6>> t5(6);
-//    t5 = genAllProds(t4, 4, ts);
-//    for(int i = 0; i<t5.size(); i++){
-//        std::cout<<"LDE"<<i<<": "<<t5[i].size()<< "\n";
+//    std::cout<<"Generated T Count 3 \n";
+//    for(int i = 0; i<t3.size(); i++){
+//        std::cout<<"LDE"<<i<<": "<<t3[i].size()<< "\n";
 //    }
-
-//    t5 = genAllPerms(t5, odds);
-//    std::cout<<"Generated T Count 5 \n";
-//    for(int i = 0; i<t5.size(); i++){
-//        std::cout<<"LDE"<<i<<": "<<t5[i].size()<< "\n";
+//
+//
+//    //generating t count 4
+//    //this step takes something in the order of 100 times longer,
+//    //Reduced runtime including this to ~1-2 minutes, but it goes from 3 seconds to get to T-Count 3
+//    //to that for 4... not a good growth rate
+//    std::vector<std::vector<SO6>> t4(5);
+//    t4  = genAllProds(t3, ts, 7);
+////    for(int i = 0; i<t4.size(); i++){
+////        std::cout<<"LDE"<<i<<": "<<t4[i].size()<< "\n";
+////    }
+//
+//    t4 = genAllPerms(t4, t2, 5);
+//    std::cout<<"Generated T Count 4 \n";
+//    for(int i = 0; i<t4.size(); i++){
+//        std::cout<<"LDE"<<i<<": "<<t4[i].size()<< "\n";
 //    }
+////
+////    std::vector<std::vector<SO6>> t5(6);
+////    t5 = genAllProds(t4, 4, ts);
+////    for(int i = 0; i<t5.size(); i++){
+////        std::cout<<"LDE"<<i<<": "<<t5[i].size()<< "\n";
+////    }
+//
+////    t5 = genAllPerms(t5, odds);
+////    std::cout<<"Generated T Count 5 \n";
+////    for(int i = 0; i<t5.size(); i++){
+////        std::cout<<"LDE"<<i<<": "<<t5[i].size()<< "\n";
+////    }
 
     return 0;
 }
