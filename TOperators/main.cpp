@@ -47,6 +47,8 @@ SO6 tMatrix(int i, int j){
     return(t);
 }
 
+//Product generation helper functions
+
 /**
  * Returns the itemwise union of two vectors of vectors of SO6
  * @param a a vector of vectors of SO6
@@ -137,17 +139,7 @@ vector<vector<SO6>> genAllProds(vector<vector<SO6>>& TminusOne, vector<SO6>& tma
 }
 
 
-
-//int getLength(vector<vector<SO6>>& input){
-//    int l = 0;
-//    for(int i = 0; i<input.size(); i++){
-//        l+= input[i].size();
-//    }
-//    return l;
-//}
-
-
-//Helper methods for pruneAllPerms
+//Permutation Pruning helper functions
 
 //Prunes a vector of SO6 of matrices equivalent to check in indices between a and b
 void selfCheckHelper(vector<SO6>& vec, SO6& check, int a, int b){
@@ -174,7 +166,7 @@ bool containedIn(vector<SO6>& v, SO6& entry){
 
 //Prunes a vector of SO6 of matrices equivalent to those in past in indices from a to b
 void pastCheckHelper(vector<SO6>& vec, vector<SO6>& past, int a, int b){
-    // Takes one strata of LDEs with LDE LDE, and then compares with relevant prior sets in lowerTs
+    // Takes a vector of constant LDE, and compares with the past vector
     for(int i = a; i < b; i++){
         if(containedIn(past, vec[i]))
             vec[i].setName("None"); //Marks for deletion
@@ -208,14 +200,13 @@ void pruneAllPerms(vector<vector<SO6>>& unReduced, vector<vector<SO6>>& tMinusTw
     // Past-Checking
     //iterating over every relevant LDE
     for(int i = 0; i<tMinusTwo.size(); i++){
-        if(unReduced[i].size()== 0) continue;
+        while(unReduced[i].size() == 0 && (i<unReduced.size()-1)) ++i;
         numPerThread = unReduced[i].size()/numThreads;
-
-        //distributing elements evenly to the threads and pruning
+        //distributing elements evenly to the threads and pruning over that range in each thread
         for(int j = 0; j<numThreads-1; j++){
             threads[j] = thread(pastCheckHelper, ref(unReduced[i]), ref(tMinusTwo[i]), j*numPerThread, (j+1)*numPerThread);
         }
-        threads[numThreads-1] = thread(pastCheckHelper, ref(unReduced[i]), ref(tMinusTwo[i]), numThreads*numPerThread, unReduced[i].size());
+        threads[numThreads-1] = thread(pastCheckHelper, ref(unReduced[i]), ref(tMinusTwo[i]), (numThreads-1)*numPerThread, unReduced[i].size());
 
         //waiting for all threads to complete
         for(int j = 0; j<numThreads; j++)
@@ -229,10 +220,9 @@ void pruneAllPerms(vector<vector<SO6>>& unReduced, vector<vector<SO6>>& tMinusTw
         for(int j = 0; j<unReduced[i].size(); j++){
 
             //skipping past entries marked as "None"
-            while(unReduced[i][j].getName() == "None" && (j<unReduced.size()-1)) ++j;
-            //Finding the number per thread. Notice this is integer division, so numPerThread*numThreads<= (toReturn[i].size()-j-1)
+            while(unReduced[i][j].getName() == "None" && (j<unReduced[i].size()-1)) ++j;
+            //Finding the number per thread. Notice this is integer division
             numPerThread = (unReduced[i].size()-j-1)/numThreads;
-
             //allocating to threads
             //will turn equivalent matrices to "None" name
             for(int k = 0; k<numThreads-1; k++){
@@ -277,8 +267,7 @@ int main(){
 
     //timing
     auto tbefore = chrono::high_resolution_clock::now();
-    //generating list of T matrices
-    //in the order Andrew wanted
+    //generating list of T matrices in the order Andrew wanted
     vector<SO6> ts; //t count 1 matrices
     for(int i = 0; i<15; i++){
         if(i<5)
@@ -326,8 +315,10 @@ int main(){
         prior = current;
         current = next;
     }
+
+    //Time display and exit messioge
     chrono::duration<double> timeelapsed = chrono::high_resolution_clock::now() - tbefore;
-    cout<< "Time elapsed: "<<timeelapsed.count()<<"\n";
+    cout<< "Time elapsed to generate up to T-count"<< tCount<< ": "<<timeelapsed.count()<<"\n";
     cout<< "Press any character and then Enter to continue...";
     string i;
     cin>> i;
