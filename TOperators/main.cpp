@@ -193,7 +193,7 @@ void pruneAllPerms(vector<vector<SO6>>& unReduced, vector<vector<SO6>>& tMinusTw
      * and then by comparing all of the matrices in the same T-count
      */
 
-    //initializing relevant varaibles
+    //initializing relevant variables
     std::thread threads[numThreads];
     int numPerThread;
 
