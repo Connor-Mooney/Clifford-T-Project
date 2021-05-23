@@ -46,21 +46,6 @@ SO6 tMatrix(int i, int j){
 }
 
 /**
- * Returns whether or not an SO6 is contained in a vector of SO6
- * @param v the vector of SO6 to be checked for v
- * @param entry the SO6 to be compared to elements of v
- * @return whether or not v is contained in entry
- */
-bool containedIn(vector<SO6>& v, SO6& entry){
-    for(SO6 item: v){
-        if(entry == item){
-            return(true);
-        }
-    }
-    return(false);
-}
-
-/**
  * Returns the itemwise union of two vectors of vectors of SO6
  * @param a a vector of vectors of SO6
  * @param a another vector of vectors of SO6
@@ -80,15 +65,6 @@ vector<vector<SO6>> mergedVect(vector<vector<SO6>>& a, vector<vector<SO6>>& b){
         m.push_back(u);
     }
     return(m);
-}
-
-vector<SO6> mergedVect(vector<SO6>& a, vector<SO6>& b){
-    vector<SO6> m;
-    for(int i = 0; i<a.size(); i++)
-        m.push_back(a[i]);
-    for(int i = 0; i<b.size(); i++)
-        m.push_back(b[i]);
-    return m;
 }
 
 // Divides a vect of vects evenly over every LDE into numThreads vectors of vectors
@@ -111,27 +87,13 @@ vector<vector<vector<SO6>>> divideVect(vector<vector<SO6>>& toDivide, int numThr
     return toReturn;
 }
 
-vector<vector<SO6>> divideVect(vector<SO6>& toDivide, int numThreads){
-    vector<vector<SO6>> toReturn(numThreads);
-    int numberPerThread = toDivide.size() / numThreads;
-    for(int i = 0; i<numThreads; i++){
-        for(int j = i*numberPerThread; j<(i+1)*numberPerThread; j++){
-            toReturn[i].push_back(toDivide[j]);
-        }
-    }
-    for(int i = numThreads*numberPerThread; i<toDivide.size(); i++)
-        toReturn[i-numThreads*numberPerThread].push_back(toDivide[i]);
-    return toReturn;
-}
-
-
 /**
  * multiplies every entry of a vector of SO6 with every entry of another vector, and returns it sorted by LDE
  * @param batch small batch of various LDEs
  * @param tmats a vector of SO6 to multiply, we will always pass it the vector of the 15 T-Count 1 matrices though
  * @return a vector of vectors of SO6, containing the products of elements of tCounts and oneLDE, sorted by LDE
  */
-vector<vector<SO6>> genProds(vector<vector<SO6>>& batch, vector<SO6>& tmats){
+vector<vector<SO6>> prodHelper(vector<vector<SO6>>& batch, vector<SO6>& tmats){
     // Takes one strata of LDEs from T count tCount, and multiplies by all T-count 1 matrices
     // Does NOT check for permutation
     int numLDES = batch.size()+1;
@@ -162,7 +124,7 @@ vector<vector<SO6>> genAllProds(vector<vector<SO6>>& TminusOne, vector<SO6>& tma
     future<vector<vector<SO6>>> threads[numThreads];
     vector<vector<SO6>> prod[numThreads];
     for(int i = 0; i<numThreads; i++)
-        threads[i] = async(launch::async, genProds, ref(threadinput[i]), ref(tmats));
+        threads[i] = async(launch::async, prodHelper, ref(threadinput[i]), ref(tmats));
     for(int i = 0; i<numThreads; i++){
         prod[i] = threads[i].get();
     }
@@ -174,14 +136,16 @@ vector<vector<SO6>> genAllProds(vector<vector<SO6>>& TminusOne, vector<SO6>& tma
 
 
 
-int getLength(vector<vector<SO6>>& input){
-    int l = 0;
-    for(int i = 0; i<input.size(); i++){
-        l+= input[i].size();
-    }
-    return l;
-}
+//int getLength(vector<vector<SO6>>& input){
+//    int l = 0;
+//    for(int i = 0; i<input.size(); i++){
+//        l+= input[i].size();
+//    }
+//    return l;
+//}
 
+
+//Helper methods for pruneAllPerms
 
 //Prunes a vector of SO6 of matrices equivalent to check in indices between a and b
 void selfCheckHelper(vector<SO6>& vec, SO6& check, int a, int b){
@@ -189,6 +153,21 @@ void selfCheckHelper(vector<SO6>& vec, SO6& check, int a, int b){
         if(check==vec[i])
             vec[i].setName("None"); //Marks for deletion
     }
+}
+
+/**
+ * Returns whether or not an SO6 is contained in a vector of SO6
+ * @param v the vector of SO6 to be checked for v
+ * @param entry the SO6 to be compared to elements of v
+ * @return whether or not v is contained in entry
+ */
+bool containedIn(vector<SO6>& v, SO6& entry){
+    for(SO6 item: v){
+        if(entry == item){
+            return(true);
+        }
+    }
+    return(false);
 }
 
 //Prunes a vector of SO6 of matrices equivalent to those in past in indices from a to b
@@ -199,7 +178,6 @@ void pastCheckHelper(vector<SO6>& vec, vector<SO6>& past, int a, int b){
             vec[i].setName("None"); //Marks for deletion
     }
 }
-
 
 bool isNone(SO6& toCheck){
     return(toCheck.getName()=="None");
@@ -214,34 +192,45 @@ bool isNone(SO6& toCheck){
 
 void pruneAllPerms(vector<vector<SO6>>& unReduced, vector<vector<SO6>>& tMinusTwo, int numThreads){
     /*
-     * General Structure: examines each LDE separately, finds redundant matrices, marks them for deletion, and then,
-     * at the end of the method, deletes them.
+     * General Structure: examines each LDE separately, finds redundant matrices,
+     * marks them for deletion by changing their name to "None,"
+     * and then at the end of the method deletes them.
+     * Does this in two stages: First by comparing to the T-count 2 down,
+     * and then by comparing all of the matrices in the same T-count
      */
 
-    // First does check on the past
+    //initializing relevant varaibles
     std::thread threads[numThreads];
     int numPerThread;
+
+    // Past-Checking
     //iterating over every relevant LDE
     for(int i = 0; i<tMinusTwo.size(); i++){
         if(unReduced[i].size()== 0) continue;
         numPerThread = unReduced[i].size()/numThreads;
+
+        //distributing elements evenly to the threads and pruning
         for(int j = 0; j<numThreads-1; j++){
             threads[j] = thread(pastCheckHelper, ref(unReduced[i]), ref(tMinusTwo[i]), j*numPerThread, (j+1)*numPerThread);
         }
         threads[numThreads-1] = thread(pastCheckHelper, ref(unReduced[i]), ref(tMinusTwo[i]), numThreads*numPerThread, unReduced[i].size());
-        //waiting for all threads to be performed
+
+        //waiting for all threads to complete
         for(int j = 0; j<numThreads; j++)
             threads[j].join();
     }
-    //self checking
+
+    //Self-Checking
     //iterating over all LDEs
     for(int i = 0; i<unReduced.size(); i++){
-        //iterating over all entries, and then checking whether entries to the right of it are equivalent
+        //iterating over all entries, and then marking all entries equivalent to them to their right for deletion
         for(int j = 0; j<unReduced[i].size(); j++){
+
             //skipping past entries marked as "None"
             while(unReduced[i][j].getName() == "None" && (j<unReduced.size()-1)) ++j;
             //Finding the number per thread. Notice this is integer division, so numPerThread*numThreads<= (toReturn[i].size()-j-1)
             numPerThread = (unReduced[i].size()-j-1)/numThreads;
+
             //allocating to threads
             //will turn equivalent matrices to "None" name
             for(int k = 0; k<numThreads-1; k++){
@@ -255,7 +244,7 @@ void pruneAllPerms(vector<vector<SO6>>& unReduced, vector<vector<SO6>>& tMinusTw
                 threads[k].join();
             }
         }
-        //Removes all "None" SO6s
+        //Removing all elements marked for deletion ("None" name)
         unReduced[i].erase(std::remove_if(unReduced[i].begin(), unReduced[i].end(), isNone), unReduced[i].end());
     }
 }
@@ -271,6 +260,13 @@ void pruneAllPerms(vector<vector<SO6>>& unReduced, vector<vector<SO6>>& tMinusTw
 
 
 int main(){
+
+    //Asking for number of threads
+    int numThreads;
+    cout<<"How many threads would you like to utilize? Please enter here: ";
+    cin>>numThreads;
+
+
     //generating list of T matrices
     //in the order Andrew wanted
     vector<SO6> ts; //t count 1 matrices
@@ -287,60 +283,21 @@ int main(){
             ts.push_back(tMatrix(4,5));
     }
     cout<<"Generated T count 1 \n";
-    vector<vector<SO6>> t1 = vector<vector<SO6>>{vector<SO6>(), ts}; //vector of the distributions of odd t-count matrices
 
-    cout<<t1.size()<<"\n";
-    //generating t count 2
-    //for some reason this generates 166 as opposed to 165
-    //the weird thing is that the higher t counts all agree perfectly with Andrew
-    //The reason is that it doesn't catch the first operator which is just a Clifford operator
-    //leaving it for now
-    int numThreads;
-    cin>>numThreads;
-    vector<vector<SO6>> t0;
-    vector<vector<SO6>> t2;
-    t2 = genAllProds(t1, ts, numThreads);
-    pruneAllPerms(t2, t0, numThreads);
-    cout<<"Generated T count 2 \n";
-    for(int i = 0; i<t2.size(); i++){
-        cout<<"LDE"<<i<<": "<<t2[i].size()<< "\n";
+    //Generating Higher T-Counts
+    vector<vector<SO6>> prior;
+    vector<vector<SO6>> current = vector<vector<SO6>>{vector<SO6>(), ts};
+    vector<vector<SO6>> next;
+    for(int i = 0; i<3; i++){
+        next = genAllProds(current, ts, numThreads);
+        pruneAllPerms(next, prior, numThreads);
+        cout<<"Generated T-count "<<(i+2)<<"\n";
+        for(int j = 0; j<next.size(); j++){
+            cout<<"LDE"<<j<<": "<<next[j].size()<< "\n";
+        }
+        prior = current;
+        current = next;
     }
-
-    //generating t count 3
-    std::vector<std::vector<SO6>> t3;
-    t3 = genAllProds(t2, ts, numThreads);
-    pruneAllPerms(t3, t1, numThreads);
-
-    std::cout<<"Generated T Count 3 \n";
-    for(int i = 0; i<t3.size(); i++){
-        std::cout<<"LDE"<<i<<": "<<t3[i].size()<< "\n";
-    }
-
-
-    //generating t count 4
-    //this step takes something in the order of 100 times longer,
-    //Reduced runtime including this to ~1-2 minutes, but it goes from 3 seconds to get to T-Count 3
-    //to that for 4... not a good growth rate
-    std::vector<std::vector<SO6>> t4(5);
-    t4  = genAllProds(t3, ts, numThreads);
-    pruneAllPerms(t4, t2, numThreads);
-    std::cout<<"Generated T Count 4 \n";
-    for(int i = 0; i<t4.size(); i++){
-        std::cout<<"LDE"<<i<<": "<<t4[i].size()<< "\n";
-    }
-//
-//    std::vector<std::vector<SO6>> t5(6);
-//    t5 = genAllProds(t4, 4, ts);
-//    for(int i = 0; i<t5.size(); i++){
-//        std::cout<<"LDE"<<i<<": "<<t5[i].size()<< "\n";
-//    }
-//
-////    t5 = genAllPerms(t5, odds);
-////    std::cout<<"Generated T Count 5 \n";
-////    for(int i = 0; i<t5.size(); i++){
-////        std::cout<<"LDE"<<i<<": "<<t5[i].size()<< "\n";
-////    }
-
     return 0;
 }
 
