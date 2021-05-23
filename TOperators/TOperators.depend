@@ -38,12 +38,14 @@
 	<iostream>
 	"Z2.hpp"
 
-1621735363 source:c:\users\connor mooney\clifford-t-project\toperators\main.cpp
+1621790447 source:c:\users\connor mooney\clifford-t-project\toperators\main.cpp
 	<algorithm>
 	<iostream>
 	<vector>
 	<thread>
 	<future>
+	<fstream>
+	<chrono>
 	"Z2.hpp"
 	"SO6.hpp"
 

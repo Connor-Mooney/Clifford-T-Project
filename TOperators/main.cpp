@@ -326,7 +326,7 @@ int main(){
 
     //Time display and exit messioge
     chrono::duration<double> timeelapsed = chrono::high_resolution_clock::now() - tbefore;
-    cout<< "Time elapsed to generate up to T-count"<< tCount<< ": "<<timeelapsed.count()<<"\n";
+    cout<< "Time elapsed to generate up to T-count "<< tCount<< ": "<<timeelapsed.count()<<"\n";
     cout<< "Press any character and then Enter to continue...";
     string i;
     cin>> i;
