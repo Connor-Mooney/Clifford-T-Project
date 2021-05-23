@@ -200,15 +200,20 @@ void pruneAllPerms(vector<vector<SO6>>& unReduced, vector<vector<SO6>>& tMinusTw
     // Past-Checking
     //iterating over every relevant LDE
     for(int i = 0; i<tMinusTwo.size(); i++){
+
         while(unReduced[i].size() == 0 && (i<unReduced.size()-1)) ++i;
+
+        //Finding number of elements per thread. Notice this is integer division
         numPerThread = unReduced[i].size()/numThreads;
+
         //distributing elements evenly to the threads and pruning over that range in each thread
         for(int j = 0; j<numThreads-1; j++){
             threads[j] = thread(pastCheckHelper, ref(unReduced[i]), ref(tMinusTwo[i]), j*numPerThread, (j+1)*numPerThread);
         }
+        //making sure the elements left behind by integer division are checked too
         threads[numThreads-1] = thread(pastCheckHelper, ref(unReduced[i]), ref(tMinusTwo[i]), (numThreads-1)*numPerThread, unReduced[i].size());
 
-        //waiting for all threads to complete
+        //waiting for all threads to execute
         for(int j = 0; j<numThreads; j++)
             threads[j].join();
     }
@@ -221,22 +226,25 @@ void pruneAllPerms(vector<vector<SO6>>& unReduced, vector<vector<SO6>>& tMinusTw
 
             //skipping past entries marked as "None"
             while(unReduced[i][j].getName() == "None" && (j<unReduced[i].size()-1)) ++j;
+
             //Finding the number per thread. Notice this is integer division
             numPerThread = (unReduced[i].size()-j-1)/numThreads;
+
             //allocating to threads
             //will turn equivalent matrices to "None" name
             for(int k = 0; k<numThreads-1; k++){
                 //looking through toReturn[i] in parallel
                 threads[k] = thread(selfCheckHelper, ref(unReduced[i]), ref(unReduced[i][j]), j+1+k*numPerThread, j+1+(k+1)*numPerThread);
             }
+            //making sure the elements left behind by integer division are checked too
             threads[numThreads-1] = thread(selfCheckHelper, ref(unReduced[i]), ref(unReduced[i][j]), j+1+(numThreads-1)*numPerThread, unReduced[i].size());
 
-            //waiting for all to be performed
+            //waiting for all threads to execute
             for(int k = 0; k<numThreads; k++){
                 threads[k].join();
             }
         }
-        //Removing all elements marked for deletion ("None" name)
+        //Removing all elements marked for deletion (having the name "None")
         unReduced[i].erase(std::remove_if(unReduced[i].begin(), unReduced[i].end(), isNone), unReduced[i].end());
     }
 }
