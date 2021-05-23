@@ -14,6 +14,8 @@
 #include <vector>
 #include <thread>
 #include <future>
+#include <fstream>
+#include <chrono>
 #include "Z2.hpp"
 #include "SO6.hpp"
 
@@ -261,12 +263,20 @@ void pruneAllPerms(vector<vector<SO6>>& unReduced, vector<vector<SO6>>& tMinusTw
 
 int main(){
 
-    //Asking for number of threads
+    //Asking for number of threads and tCount to generate to
+    // Seems to slow things down, so may remove this and just hardcode it in.
     int numThreads;
+    int tCount;
     cout<<"How many threads would you like to utilize? Please enter here: ";
     cin>>numThreads;
+    cout<<"\nTo what T-Count do you want to generate? Please enter here: ";
+    cin>>tCount;
+    cout<<"\n";
+    ofstream write;
+    string fileName;
 
-
+    //timing
+    auto tbefore = chrono::high_resolution_clock::now();
     //generating list of T matrices
     //in the order Andrew wanted
     vector<SO6> ts; //t count 1 matrices
@@ -284,20 +294,43 @@ int main(){
     }
     cout<<"Generated T count 1 \n";
 
+    write = ofstream("T1.txt");
+    for(int i = 0; i<15; i++){
+        write<<ts[i].getName()<<"\n";
+        write<<ts[i];
+    }
+    cout<<"Wrote T-Count 1 to 'T1.txt' \n\n";
+
+
     //Generating Higher T-Counts
     vector<vector<SO6>> prior;
     vector<vector<SO6>> current = vector<vector<SO6>>{vector<SO6>(), ts};
     vector<vector<SO6>> next;
-    for(int i = 0; i<3; i++){
+    for(int i = 0; i<tCount-1; i++){
+        fileName = "T" + to_string(i+2) + ".txt";
+        write = ofstream(fileName);
         next = genAllProds(current, ts, numThreads);
         pruneAllPerms(next, prior, numThreads);
         cout<<"Generated T-count "<<(i+2)<<"\n";
         for(int j = 0; j<next.size(); j++){
             cout<<"LDE"<<j<<": "<<next[j].size()<< "\n";
         }
+        for(int j = 0; j<next.size(); j++){
+            for(int k = 0; k<next[j].size(); k++){
+                write<<next[j][k].getName()<<"\n";
+                write<<next[j][k];
+            }
+        }
+        cout<<"Wrote T-Count "<<(i+2)<<" to 'T"<<(i+2)<<".txt' \n\n";
+        write.close();
         prior = current;
         current = next;
     }
+    chrono::duration<double> timeelapsed = chrono::high_resolution_clock::now() - tbefore;
+    cout<< "Time elapsed: "<<timeelapsed.count()<<"\n";
+    cout<< "Press any character and then Enter to continue...";
+    string i;
+    cin>> i;
     return 0;
 }
 
